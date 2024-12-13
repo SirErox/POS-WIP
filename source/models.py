@@ -1,8 +1,6 @@
 from sqlalchemy import Column,Integer,String,Enum
 from sqlalchemy.ext.declarative import declarative_base
-from .config_db import engine
-
-Base=declarative_base()
+from database import Base
 
 class Table_usuario(Base):
     __tablename__='usuarios'
@@ -11,5 +9,3 @@ class Table_usuario(Base):
     username=Column(String(50),unique=True)
     password=Column(String(255))
     rol=Column(Enum('administrador','cajero'),default='cajero')
-
-Base.metadata.create_all(bind=engine)

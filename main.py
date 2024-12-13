@@ -1,16 +1,9 @@
 import sys
 from PyQt5.QtWidgets import QApplication
-from source.login_ui import LoginWindow
-from source.crud import agregar_usuario,listar_usuarios
-
-#resultado=agregar_usuario("David","admin","admin123","administrador")
-#print(resultado)
-
-usuarios=listar_usuarios()
-for usuario in usuarios:
-    print(f"ID: {usuario.id}, Nombre: {usuario.nombre}, Username: {usuario.username}, Rol: {usuario.rol}")
-
+from source.UI.login_ui import LoginWindow
+from database import init_db
 def main():
+    init_db()
     app = QApplication(sys.argv)
     window = LoginWindow()
     window.show()
