@@ -1,30 +1,20 @@
-from sqlalchemy import create_engine
-from dotenv import load_dotenv
-import os
-from source.models import Base
+import sys
+from PyQt5.QtWidgets import QApplication
+from source.login_ui import LoginWindow
+from source.crud import agregar_usuario,listar_usuarios
 
-load_dotenv("any.env")
-db_user=os.getenv("DB_USER")
-db_password=os.getenv("DB_PASSWORD")
-db_host=os.getenv("DB_HOST")
-db_name=os.getenv("DB_NAME")
+#resultado=agregar_usuario("David","admin","admin123","administrador")
+#print(resultado)
 
-engine=create_engine(f"mysql+mysqlconnector://{db_user}:{db_password}@{db_host}/{db_name}")
+usuarios=listar_usuarios()
+for usuario in usuarios:
+    print(f"ID: {usuario.id}, Nombre: {usuario.nombre}, Username: {usuario.username}, Rol: {usuario.rol}")
 
-Base.metadata.create_all(engine)
-print("tabla creada correctamente")
-try:
-    with engine.connect() as connection:
-        print("conexion exitosa")
-except Exception as e:
-    print(f"error:{e}")
+def main():
+    app = QApplication(sys.argv)
+    window = LoginWindow()
+    window.show()
+    sys.exit(app.exec_())
 
-"""db=mysql.connector.connect(
-    host="localhost",
-    user="root",
-    password="mysql123",
-    database="test.db"
-)
-
-print("conexion exitosa") if db.is_connected() else print("FALLO")
-"""
+if __name__ == "__main__":
+    main()
