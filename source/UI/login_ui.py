@@ -1,16 +1,18 @@
 from PyQt5.QtWidgets import QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QMessageBox
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from ..crud import listar_usuarios  # Importar la función para validar usuarios
 from ..security import verificar_contra
 from ..UI.main_window import MainWindow
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
-         #para quitar el icono de la ventana
-        #self.setWindowIcon()
         self.setWindowTitle("Login - POS System")
         self.setFixedSize(200, 150)
-        
+        #para quitar el icono de la ventana
+        self.setWindowIcon(QIcon("source/login.ico"))
+        #quitar icono ? de la ventana
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         # Cargar estilos
         try:
             with open('source/styles/login.css', 'r') as f:
@@ -41,6 +43,7 @@ class LoginWindow(QDialog):
 
         # Resultado de la autenticación
         self.authenticated = False
+        self.usuario=None
 
     def validate_login(self):
         username = self.input_user.text()
@@ -51,6 +54,7 @@ class LoginWindow(QDialog):
             if usuario.username == username and verificar_contra(password,usuario.password):
                 QMessageBox.information(self, "Login", f"Bienvenido {usuario.nombre}")
                 self.authenticated = True
+                self.usuario=usuario
                 self.accept()  # Cierra el diálogo
                 # Abrir ventana principal
                 main_window = MainWindow(usuario)

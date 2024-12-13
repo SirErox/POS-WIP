@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import(QMainWindow, QLabel, QVBoxLayout, QPushButton, QWidg
 class MainWindow(QMainWindow):
     def __init__(self, usuario):
         super().__init__()
-        self.setWindowTitle("POS System - Ventana Principal")
+        self.usuario=usuario
+        self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre}")
         self.setFixedSize(800, 600)
         layout = QVBoxLayout()
         
