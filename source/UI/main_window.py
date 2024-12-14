@@ -8,7 +8,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.usuario = usuario
         self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre}")
-        self.setWindowIcon(QIcon('source/icons/logo.ico'))
+        self.setWindowIcon(QIcon('source/icons/logo.ico'))  
         self.resize(800, 600)
 
         # Layout Principal
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         self.add_menu_button("Ventas", 'source/icons/sales.png', self.show_ventas)
 
         if self.usuario.rol == "administrador":
-            self.add_menu_button("Control de Usuarios", 'source/icons/users.png', self.show_user_control)
+            self.add_menu_button("Control de Usuarios", 'source/icons/users.png', self.open_user_control)
 
         # Menú expandible
         self.menu_expanded = False
@@ -146,7 +146,7 @@ class MainWindow(QMainWindow):
 
     def open_user_control(self):
         user_control_window=UserControlWindow()
-        user_control_window.exec_()
+        user_control_window.show()
 
     def abrir_ventana_ventas(self):
         QMessageBox.information(self, "Ventas", "Abriendo la ventana de ventas...")

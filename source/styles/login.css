@@ -1,3 +1,10 @@
+#titleLabel {
+    font-size: 24px;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
 QMainWindow {
     background-color: whitesmoke;
     font-family: Arial, sans-serif;

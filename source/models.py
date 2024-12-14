@@ -1,5 +1,4 @@
 from sqlalchemy import Column,Integer,String,Enum
-from sqlalchemy.ext.declarative import declarative_base
 from database import Base
 
 class Table_usuario(Base):

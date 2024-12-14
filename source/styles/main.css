@@ -1,3 +1,10 @@
+#titleLabel {
+    font-size: 24px;
+    color: #333;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
 QMainWindow {
     background-color: whitesmoke;
     font-family: Arial, sans-serif;
@@ -25,14 +32,15 @@ QLineEdit {
 QPushButton {
     background-color: #e652c9;
     color: #ECEFF4;
-    border: 1px;
-    padding: 10px ;
+    border: 1px solid ;
+    padding: 8px 15px ;
     border-radius: 5px;
     font-size: 14px;
 }
 
 QPushButton:hover {
     background-color: #536f7c;
+    opacity: 0.9;
 }
 
 QPushButton:checked{

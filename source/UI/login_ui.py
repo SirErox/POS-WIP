@@ -30,7 +30,7 @@ class LoginWindow(QDialog):
         
         # Logo
         self.logo_label = QLabel(self)
-        self.logo_label.setPixmap(QPixmap("source/icons/logo.jpeg").scaled(200, 250, Qt.KeepAspectRatio))
+        self.logo_label.setPixmap(QPixmap("source/icons/logo.jpeg").scaled(250, 300, Qt.KeepAspectRatio))
         self.logo_label.setAlignment(Qt.AlignCenter)
 
          # Espacio entre logo y campos de texto
