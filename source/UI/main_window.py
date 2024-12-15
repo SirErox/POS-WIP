@@ -16,7 +16,7 @@ class MainWindow(QMainWindow):
         self.central_widget = QWidget()
         self.central_widget.setLayout(self.main_layout)
         self.setCentralWidget(self.central_widget)
-
+        self.user_window=None
         # Menú lateral y contenido
         self.menu_expanded = False  # Estado del menú
         self.setup_menu()
@@ -145,8 +145,11 @@ class MainWindow(QMainWindow):
             button.setChecked(name == selected_name)
 
     def open_user_control(self):
-        user_control_window=UserControlWindow()
-        user_control_window.show()
+        if not self.user_window or not self.user_window.isVisible():
+            self.user_window = UserControlWindow()
+            self.user_window.show()
+        else:
+            self.user_window.raise_()  # Traer la ventana al frente si ya está abierta
 
     def abrir_ventana_ventas(self):
         QMessageBox.information(self, "Ventas", "Abriendo la ventana de ventas...")

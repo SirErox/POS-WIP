@@ -8,13 +8,16 @@ db=SessionLocal()
 
 #para agregar usuarios a la tabla usuarios
 def agregar_usuario(nombre, username, password,rol):
-    hashed_password = hashear_contra(password)
-    nuevo_usuario = Table_usuario(nombre=nombre, username=username, password=hashed_password, rol=rol)
-    with SessionLocal() as db:  # Manejo seguro de la sesión
-        db.add(nuevo_usuario)
-        db.commit()
-        db.refresh(nuevo_usuario)  # Actualiza el objeto con los datos de la DB
-    return nuevo_usuario
+    sesion=SessionLocal()
+    try:
+        nuevo_usuario = Table_usuario(nombre=nombre, username=username, password=hashear_contra(password), rol=rol)
+        sesion.add(nuevo_usuario)
+        sesion.commit()
+    except Exception as e:
+        sesion.rollback()
+        raise e
+    finally:
+        sesion.close()
 #para listar usuarios de la tabla usuarios
 def listar_usuarios():
     with SessionLocal() as db:
@@ -32,7 +35,7 @@ def registrar_actividad(usuario_id, accion):
         db.commit()
     
 #para editar usuarios de la tabla usuarios
-def editar_usuario(usuario_id, nuevo_nombre=None, nuevo_username=None, nuevo_rol=None):
+def editar_usuario(usuario_id, nuevo_nombre=None, nuevo_username=None,nuevo_password=None, nuevo_rol=None):
     with SessionLocal() as db:
         usuario = db.query(Table_usuario).get(usuario_id)
         if usuario:
@@ -40,6 +43,8 @@ def editar_usuario(usuario_id, nuevo_nombre=None, nuevo_username=None, nuevo_rol
                 usuario.nombre = nuevo_nombre
             if nuevo_username:
                 usuario.username = nuevo_username
+            if nuevo_password:
+                usuario.password= hashear_contra(nuevo_password)
             if nuevo_rol:
                 usuario.rol = nuevo_rol
             db.commit()

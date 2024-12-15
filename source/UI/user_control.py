@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QMessageBox
+    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QMessageBox,
+    QInputDialog
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from database import SessionLocal
-from models import Table_usuario
+from .User_form import UserFormDialog
 from ..crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios
 class UserControlWindow(QWidget):
     def __init__(self):
@@ -74,30 +75,55 @@ class UserControlWindow(QWidget):
     def load_users(self):
         """Cargar datos de usuarios desde la base de datos."""
         try:
-            users=listar_usuarios(self.session)
-            #cursor = self.db_connection.cursor()
-            self.user_table.setRowCount(len(users))  # Limpiar la tabla
-            for row, user in enumerate(users):
-                self.user_table.insertRow(row)
-                self.user_table.setItem(row, 0, QTableWidgetItem(str(user.id)))
-                self.user_table.setItem(row, 1, QTableWidgetItem(user.username))
-                self.user_table.setItem(row, 2, QTableWidgetItem(user.role))
+            users = listar_usuarios()  # Llama al CRUD
+            self.user_table.setRowCount(len(users))
+            for row_idx, user in enumerate(users):
+                self.user_table.setItem(row_idx, 0, QTableWidgetItem(str(user.id)))
+                self.user_table.setItem(row_idx, 1, QTableWidgetItem(user.nombre))
+                self.user_table.setItem(row_idx, 2, QTableWidgetItem(user.rol))
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al cargar usuarios: {e}")
-
+            QMessageBox.critical(self, "Error", f"No se pudieron cargar los usuarios: {e}")
+    
     def add_user(self):
         """Función para añadir usuario."""
-        # Aquí puedes llamar una ventana secundaria o formulario
-        QMessageBox.information(self, "Añadir Usuario", "Función para añadir nuevo usuario.")
-        self.load_users()  # Recargar usuarios después de añadir
+        dialog = UserFormDialog("Añadir Usuario")
+        if dialog.exec_():  # Si el usuario presiona "Aceptar"
+            nombre, username, password, rol = dialog.get_data()
+            if nombre and username and password and rol:
+                try:
+                    agregar_usuario(nombre, username, password, rol)  # Contraseña temporal
+                    QMessageBox.information(self, "Éxito", "Usuario agregado correctamente.")
+                    self.load_users()
+                except Exception as e:
+                    QMessageBox.critical(self, "Error", f"No se pudo agregar el usuario: {e}")
+            else:
+                QMessageBox.warning(self, "Atención", "Todos los campos son obligatorios.")
 
     def edit_user(self):
         """Función para editar usuario."""
         selected = self.user_table.currentRow()
         if selected >= 0:
-            user_id = self.user_table.item(selected, 0).text()
-            QMessageBox.information(self, "Editar Usuario", f"Editar usuario ID: {user_id}")
-            self.load_users()  # Recargar usuarios después de editar
+            user_id = int(self.user_table.item(selected, 0).text())
+            current_nombre = self.user_table.item(selected, 1).text()
+            current_rol = self.user_table.item(selected, 2).text()
+
+            # Obtener datos actuales (contraseña se pide de nuevo por seguridad)
+            dialog = UserFormDialog(
+                "Editar Usuario", 
+                nombre=current_nombre, 
+                rol=current_rol
+            )
+            if dialog.exec_():
+                new_nombre, new_username, new_password, new_rol = dialog.get_data()
+                if new_nombre and new_username and new_rol:
+                    try:
+                        editar_usuario(user_id, new_nombre, new_username, new_password, new_rol)
+                        QMessageBox.information(self, "Éxito", "Usuario editado correctamente.")
+                        self.load_users()
+                    except Exception as e:
+                        QMessageBox.critical(self, "Error", f"No se pudo editar el usuario: {e}")
+                else:
+                    QMessageBox.warning(self, "Atención", "Todos los campos son obligatorios.")
         else:
             QMessageBox.warning(self, "Atención", "Seleccione un usuario para editar.")
 
@@ -105,20 +131,18 @@ class UserControlWindow(QWidget):
         """Función para eliminar usuario."""
         selected = self.user_table.currentRow()
         if selected >= 0:
-            user_id = self.user_table.item(selected, 0).text()
+            user_id = int(self.user_table.item(selected, 0).text())
             confirmation = QMessageBox.question(
                 self, "Eliminar Usuario", f"¿Seguro que quieres eliminar el usuario ID {user_id}?",
                 QMessageBox.Yes | QMessageBox.No
             )
-            if confirmation == QMessageBox.Yes:
-                try:
-                    cursor = self.db_connection.cursor()
-                    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
-                    self.db_connection.commit()
-                    QMessageBox.information(self, "Éxito", "Usuario eliminado correctamente.")
-                    self.load_users()
-                except Exception as e:
-                    QMessageBox.critical(self, "Error", f"No se pudo eliminar el usuario: {e}")
+        if confirmation == QMessageBox.Yes:
+            try:
+                eliminar_usuario(user_id)  # Llamada a la función CRUD
+                QMessageBox.information(self, "Éxito", "Usuario eliminado correctamente.")
+                self.load_users()
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"No se pudo eliminar el usuario: {e}")
         else:
             QMessageBox.warning(self, "Atención", "Seleccione un usuario para eliminar.")
 

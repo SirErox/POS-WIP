@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import (QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QMessageBox,
-                             QWidget,QSpacerItem,QSizePolicy)
+                             QSpacerItem,QSizePolicy,QApplication)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon,QPixmap
 from ..crud import listar_usuarios  # Importar la función para validar usuarios
@@ -9,11 +9,9 @@ class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login - POS System")
-        self.setGeometry(500,200,200, 150)
-        #para quitar el icono de la ventana
-        self.setWindowIcon(QIcon(None))
+        self.setGeometry(500,100,200, 150)
         #quitar icono ? de la ventana
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
         # Cargar estilos
         try:
             with open('source/styles/login.css', 'r') as f:
@@ -39,6 +37,7 @@ class LoginWindow(QDialog):
 
         self.label_user = QLabel("Usuario:")
         self.input_user = QLineEdit(self)
+        self.input_user.setFocus()
         self.input_user.setPlaceholderText("Usuario")
         self.label_pass = QLabel("Contraseña:")
         self.input_pass = QLineEdit(self)
@@ -46,13 +45,17 @@ class LoginWindow(QDialog):
         self.input_pass.setEchoMode(QLineEdit.Password)  # Ocultar la contraseña
 
         self.login_button = QPushButton("Iniciar Sesión")
-        self.login_button.clicked.connect(self.validate_login)
+        self.login_button.setDefault(True)
+        self.login_button.clicked.connect(lambda: self.validate_login())
+        self.close_button = QPushButton("Salir",self)
+        self.close_button.clicked.connect(self.close_app)
 
         layout.addWidget(self.label_user)
         layout.addWidget(self.input_user)
         layout.addWidget(self.label_pass)
         layout.addWidget(self.input_pass)
         layout.addWidget(self.login_button)
+        layout.addWidget(self.close_button)
         # Espaciador final
         layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
         self.setLayout(layout)
@@ -60,12 +63,15 @@ class LoginWindow(QDialog):
         # Resultado de la autenticación
         self.authenticated = False
         self.usuario=None
-
+    
+    def close_app(self):
+        QApplication.quit()  # Cierra toda la aplicación
     def validate_login(self):
-        username = self.input_user.text()
-        password = self.input_pass.text()     
-        # Validar usuario con la base de datos
+        username=self.input_user.text()
+        password=self.input_pass.text()    
+        # Validar usuario con la base de datos        
         usuarios = listar_usuarios()
+        print(f"usuarios encontrados:{usuarios}")
         for usuario in usuarios:
             if usuario.username == username and verificar_contra(password,usuario.password):
                 QMessageBox.information(self, "Login", f"Bienvenido {usuario.nombre}")
@@ -76,6 +82,5 @@ class LoginWindow(QDialog):
                 main_window = MainWindow(usuario)
                 main_window.show()
                 return
-            else:
-                # Si no se encontró el usuariox
-                QMessageBox.warning(self, "Login", "Credenciales incorrectas. Inténtalo de nuevo.")
+        
+        QMessageBox.warning(self, "Login", "Credenciales incorrectas. Inténtalo de nuevo.")
