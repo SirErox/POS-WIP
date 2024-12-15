@@ -1,12 +1,12 @@
 from PyQt5.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QMessageBox,
-    QInputDialog
+    QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QMessageBox
 )
+from datetime import datetime,date
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from database import SessionLocal
 from .User_form import UserFormDialog
-from ..crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios
+from ..database.crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios
 class UserControlWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -145,4 +145,3 @@ class UserControlWindow(QWidget):
                 QMessageBox.critical(self, "Error", f"No se pudo eliminar el usuario: {e}")
         else:
             QMessageBox.warning(self, "Atención", "Seleccione un usuario para eliminar.")
-

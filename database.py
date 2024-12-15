@@ -23,5 +23,5 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Función para inicializar la base de datos
 def init_db():
-    from source.models import Table_usuario  # Importa tus modelos aquí
+    from source.database.models import Table_usuario  # Importa tus modelos aquí
     Base.metadata.create_all(bind=engine)

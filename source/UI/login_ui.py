@@ -2,8 +2,8 @@ from PyQt5.QtWidgets import (QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialo
                              QSpacerItem,QSizePolicy,QApplication)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon,QPixmap
-from ..crud import listar_usuarios  # Importar la función para validar usuarios
-from ..security import verificar_contra
+from ..database.crud import listar_usuarios  # Importar la función para validar usuarios
+from ..database.security import verificar_contra
 from ..UI.main_window import MainWindow
 class LoginWindow(QDialog):
     def __init__(self):
