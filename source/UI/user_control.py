@@ -1,9 +1,8 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QPushButton, QLabel, QMessageBox
 )
-from datetime import datetime,date
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt5.QtGui import QIcon,QPixmap
 from database import SessionLocal
 from .User_form import UserFormDialog
 from ..database.crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios
@@ -11,7 +10,7 @@ class UserControlWindow(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Control de Usuarios")
-        self.setGeometry(400, 200, 800, 500)
+        self.setGeometry(400, 200, 1000, 600)
         self.setWindowIcon(QIcon('source/icons/users.png'))
         # Cargar estilos desde main.css
         self.load_styles("main.css")
@@ -39,17 +38,31 @@ class UserControlWindow(QWidget):
         main_layout.addWidget(title)
 
         # Tabla de usuarios
-        self.user_table = QTableWidget(0, 3)  # 3 columnas
-        self.user_table.setHorizontalHeaderLabels(["ID", "Usuario", "Rol"])
+        self.user_table = QTableWidget(0, 8)  # 3 columnas
+        self.user_table.setHorizontalHeaderLabels(["ID", "Usuario", "Nombre Completo", "Rol", "Estado", "Antigüedad", "Último Editor", "Foto"])
+
+        self.user_table.setEditTriggers(QTableWidget.NoEditTriggers)  # Bloquear edición
         self.user_table.horizontalHeader().setStretchLastSection(True)
+        self.user_table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.user_table.setAlternatingRowColors(True)
         main_layout.addWidget(self.user_table)
+
+        # Ajustar tamaño de columnas
+        self.user_table.setColumnWidth(0, 50)   # ID
+        self.user_table.setColumnWidth(1, 100)  # Usuario
+        self.user_table.setColumnWidth(2, 200)  # Nombre Completo
+        self.user_table.setColumnWidth(3, 120)  # Rol
+        self.user_table.setColumnWidth(4, 80)   # Estado
+        self.user_table.setColumnWidth(5, 100)  # Antigüedad
+        self.user_table.setColumnWidth(6, 120)  # Último Editor
+        self.user_table.setColumnWidth(7, 80)   # Foto
 
         # Botones
         button_layout = QHBoxLayout()
 
         self.add_button = QPushButton("Añadir Usuario")
         self.add_button.setObjectName("addButton")
-        self.add_button.clicked.connect(self.add_user)
+        self.add_button.clicked.connect(lambda: self.add_user())
 
         self.edit_button = QPushButton("Editar Usuario")
         self.edit_button.setObjectName("editButton")
@@ -75,18 +88,36 @@ class UserControlWindow(QWidget):
     def load_users(self):
         """Cargar datos de usuarios desde la base de datos."""
         try:
-            users = listar_usuarios()  # Llama al CRUD
+            users = listar_usuarios()
             self.user_table.setRowCount(len(users))
             for row_idx, user in enumerate(users):
                 self.user_table.setItem(row_idx, 0, QTableWidgetItem(str(user.id)))
-                self.user_table.setItem(row_idx, 1, QTableWidgetItem(user.nombre))
-                self.user_table.setItem(row_idx, 2, QTableWidgetItem(user.rol))
+                self.user_table.setItem(row_idx, 1, QTableWidgetItem(user.username))
+                self.user_table.setItem(row_idx, 2, QTableWidgetItem(user.nombre_completo))
+                self.user_table.setItem(row_idx, 3, QTableWidgetItem(user.rol))
+                self.user_table.setItem(row_idx, 4, QTableWidgetItem(user.estado))
+                self.user_table.setItem(row_idx, 5, QTableWidgetItem(user.antiguedad))
+                self.user_table.setItem(row_idx, 6, QTableWidgetItem(user.ultimo_editor))
+
+                # Imagen en la columna Foto
+                photo_label = QLabel()
+                photo_pixmap = QPixmap("source/icons/photo_icon.png").scaled(30, 30, Qt.KeepAspectRatio)
+                photo_label.setPixmap(photo_pixmap)
+                photo_label.setAlignment(Qt.AlignCenter)
+                self.user_table.setCellWidget(row_idx, 7, photo_label)
+
+                # Alinear texto al centro
+                for col in range(7):
+                    self.user_table.item(row_idx, col).setTextAlignment(Qt.AlignCenter)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudieron cargar los usuarios: {e}")
     
-    def add_user(self):
-        """Función para añadir usuario."""
-        dialog = UserFormDialog("Añadir Usuario")
+    def add_user(self,user_data=None):
+        dialog = UserFormDialog(self, user_data)
+        if dialog.exec_():
+            self.load_users()  # Recargar tabla después de guardar
+        """
+        dialog = UserFormDialog(self,user_data)
         if dialog.exec_():  # Si el usuario presiona "Aceptar"
             nombre, username, password, rol = dialog.get_data()
             if nombre and username and password and rol:
@@ -98,7 +129,7 @@ class UserControlWindow(QWidget):
                     QMessageBox.critical(self, "Error", f"No se pudo agregar el usuario: {e}")
             else:
                 QMessageBox.warning(self, "Atención", "Todos los campos son obligatorios.")
-
+"""
     def edit_user(self):
         """Función para editar usuario."""
         selected = self.user_table.currentRow()

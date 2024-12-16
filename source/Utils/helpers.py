@@ -1,4 +1,5 @@
 from datetime import date
+from source.database.security import hashear_contra
 
 def calcular_edad(fecha_nacimiento):
     """Calcula la edad en años a partir de la fecha de nacimiento."""

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Date, TIMESTAMP, func, event
 from database import Base
-from Utils.helpers import calcular_edad,calcular_antiguedad
+from source.Utils.helpers import calcular_edad,calcular_antiguedad
 
 class Table_usuario(Base):
     __tablename__='usuarios'

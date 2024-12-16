@@ -7,7 +7,7 @@ class MainWindow(QMainWindow):
     def __init__(self, usuario):
         super().__init__()
         self.usuario = usuario
-        self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre}")
+        self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre_completo}")
         self.setWindowIcon(QIcon('source/icons/logo.ico'))  
         self.resize(800, 600)
 

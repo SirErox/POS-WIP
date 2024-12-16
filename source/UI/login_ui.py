@@ -74,7 +74,7 @@ class LoginWindow(QDialog):
         print(f"usuarios encontrados:{usuarios}")
         for usuario in usuarios:
             if usuario.username == username and verificar_contra(password,usuario.password):
-                QMessageBox.information(self, "Login", f"Bienvenido {usuario.nombre}")
+                QMessageBox.information(self, "Login", f"Bienvenido {usuario.nombre_completo}")
                 self.authenticated = True
                 self.usuario=usuario
                 self.accept()  # Cierra el diálogo
