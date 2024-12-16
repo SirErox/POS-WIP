@@ -19,7 +19,10 @@ class main:
 
         # Configuración de la ventana de login
         self.login = LoginWindow()
-        self.login.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)  # Eliminar ícono
+        self.login.setWindowFlags(Qt.Window |
+        Qt.CustomizeWindowHint |
+        Qt.WindowTitleHint |
+        Qt.WindowCloseButtonHint)  # Eliminar ícono
         """
             Qt.Window: Mantiene la funcionalidad de ventana normal.
             Qt.WindowTitleHint: Permite mostrar el título de la ventana.

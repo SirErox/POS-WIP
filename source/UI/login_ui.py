@@ -11,7 +11,12 @@ class LoginWindow(QDialog):
         self.setWindowTitle("Login - POS System")
         self.setGeometry(500,100,200, 150)
         #quitar icono ? de la ventana
-        self.setWindowFlags(Qt.Window | Qt.WindowTitleHint | Qt.CustomizeWindowHint)
+        self.setWindowFlags(
+        Qt.Window |
+        Qt.CustomizeWindowHint |
+        Qt.WindowTitleHint |
+        Qt.WindowCloseButtonHint 
+        )
         # Cargar estilos
         try:
             with open('source/styles/login.css', 'r') as f:
@@ -71,7 +76,7 @@ class LoginWindow(QDialog):
         password=self.input_pass.text()    
         # Validar usuario con la base de datos        
         usuarios = listar_usuarios()
-        print(f"usuarios encontrados:{usuarios}")
+        #print(f"usuarios encontrados:{usuarios}") flag
         for usuario in usuarios:
             if usuario.username == username and verificar_contra(password,usuario.password):
                 QMessageBox.information(self, "Login", f"Bienvenido {usuario.nombre_completo}")
