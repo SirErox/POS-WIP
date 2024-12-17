@@ -6,7 +6,7 @@ from .user_control import UserControlWindow
 class MainWindow(QMainWindow):
     def __init__(self,usuario):
         super().__init__()
-        self.usuario_logueado = usuario.username
+        self.usuario_logueado = usuario.nombre_completo
         self.usuario=usuario
         #self.usuario=usuario
         self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre_completo}")
