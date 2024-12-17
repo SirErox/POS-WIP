@@ -8,8 +8,9 @@ from source.database.database import SessionLocal
 from .User_form import UserFormDialog
 from ..database.crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios,registrar_actividad
 class UserControlWindow(QWidget):
-    def __init__(self):
+    def __init__(self,logged_user):
         super().__init__()
+        self.usuario_logueado=logged_user
         self.setup_ui()
         self.load_styles()
         self.load_users()
@@ -83,7 +84,7 @@ class UserControlWindow(QWidget):
         self.ui.inputFechaInicio.setText(self.ui.tablaUsuarios.item(row, 7).text())
 
     def add_user(self):
-        dialog = UserFormDialog()
+        dialog = UserFormDialog(self.usuario_logueado)
         if dialog.exec_():
             QMessageBox.information(self, "Éxito", "Usuario agregado correctamente.")
             self.load_users()
@@ -92,20 +93,30 @@ class UserControlWindow(QWidget):
         """Función para editar usuario."""
         selected_row = self.user_table.currentRow()
         if selected_row == -1:
-            QMessageBox.warning(self, "Advertencia", "Por favor selecciona un usuario para editar.")
+            QMessageBox.warning(self, "Advertencia", "Por favor selecciona una casilla del renglon de usuario para editar.")
             return
 
+        # Obtener el ID del usuario seleccionado
         user_id = int(self.user_table.item(selected_row, 0).text())
+
+        # Obtener los datos actuales del usuario
         user_data = {
-            "username": self.user_table.item(selected_row, 2).text(),
+            "id": user_id,
             "nombre_completo": self.user_table.item(selected_row, 1).text(),
+            "username": self.user_table.item(selected_row, 2).text(),
             "rol": self.user_table.item(selected_row, 3).text()
         }
 
-        dialog = UserFormDialog(user_data)
-        if dialog.exec_():
-            QMessageBox.information(self, "Éxito", "Usuario actualizado correctamente.")
-            self.load_users()
+        # Crear y mostrar el diálogo de edición
+        dialog = UserFormDialog(self.usuario_logueado, user_data)  # Pasamos los datos actuales al formulario
+        if dialog.exec_():  # Si el usuario presiona "Guardar"
+            # Actualizar los datos en la base de datos
+            try:
+                editar_usuario(dialog.user_data)  # `dialog.user_data` debe contener los datos actualizados
+                QMessageBox.information(self, "Éxito", "Usuario actualizado correctamente.")
+                self.load_users()  # Recargar la tabla con los datos actualizados
+            except Exception as e:
+                QMessageBox.critical(self, "Error", f"No se pudo actualizar el usuario.\n{str(e)}")
 
     def delete_user(self):
         """Función para eliminar usuario."""
@@ -114,7 +125,10 @@ class UserControlWindow(QWidget):
             QMessageBox.warning(self, "Advertencia", "Por favor selecciona un usuario para eliminar.")
             return
 
+        # Obtener el ID del usuario seleccionado
         user_id = int(self.user_table.item(selected_row, 0).text())
+
+        # Confirmar la eliminación
         confirm = QMessageBox.question(
             self,
             "Confirmar Eliminación",
@@ -124,8 +138,8 @@ class UserControlWindow(QWidget):
 
         if confirm == QMessageBox.Yes:
             try:
-                eliminar_usuario(user_id)
+                eliminar_usuario(user_id)  # Llamar a la función del CRUD
                 QMessageBox.information(self, "Éxito", "Usuario eliminado correctamente.")
-                self.load_users()
+                self.load_users()  # Recargar la tabla
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo eliminar el usuario.\n{str(e)}")

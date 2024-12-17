@@ -1,7 +1,7 @@
 from .models import Table_usuario
 from source.database.database import SessionLocal
 from .security import hashear_contra
-from datetime import datetime, date
+from datetime import datetime
 # Crear una sesión global para la base de datos
 db = SessionLocal()
 
@@ -14,7 +14,7 @@ def calcular_edad(fecha_nacimiento):
     return hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
 
 # Para agregar usuarios a la tabla usuarios
-def agregar_usuario(nombre_completo, username, password, rol, foto=None, fecha_nacimiento=None, fecha_inicio=None, ultimo_editor=None):
+def agregar_usuario(nombre_completo, username, password, rol,curp, foto=None, fecha_nacimiento=None, fecha_inicio=None, ultimo_editor=None):
     sesion = SessionLocal()
     try:
         nuevo_usuario = Table_usuario(
@@ -23,6 +23,7 @@ def agregar_usuario(nombre_completo, username, password, rol, foto=None, fecha_n
             password=hashear_contra(password),
             rol=rol,
             foto_perfil=foto,
+            curp=curp,
             fecha_nacimiento=fecha_nacimiento,
             fecha_inicio=fecha_inicio,
             antiguedad=calcular_antiguedad(fecha_inicio),
@@ -57,31 +58,41 @@ def registrar_actividad(usuario_id, accion):
         db.commit()
 
 # Para editar usuarios de la tabla usuarios
-def editar_usuario(usuario_id, **kwargs):
-    with SessionLocal() as db:
-        usuario = db.query(Table_usuario).get(usuario_id)
-        if usuario:
-            for campo, valor in kwargs.items():
-                if campo == "password" and valor:  # Hashear la contraseña si se va a cambiar
-                    setattr(usuario, campo, hashear_contra(valor))
-                elif campo == "fecha_nacimiento" and valor:  # Calcular edad si cambia la fecha de nacimiento
-                    setattr(usuario, campo, valor)
-                    usuario.edad = calcular_edad(valor)
-                else:
-                    setattr(usuario, campo, valor)
-            db.commit()
-            return f"Usuario ID {usuario_id} actualizado correctamente."
-        return "Usuario no encontrado."
+def editar_usuario(user_data):
+    """Editar un usuario en la base de datos."""
+    session = SessionLocal()
+    try:
+        usuario = session.query(Table_usuario).filter_by(id=user_data["id"]).first()
+        if not usuario:
+            raise Exception("Usuario no encontrado.")
 
-# Eliminar un usuario de la tabla usuarios
-def eliminar_usuario(usuario_id):
-    with SessionLocal() as db:
-        usuario = db.query(Table_usuario).get(usuario_id)
-        if usuario:
-            db.delete(usuario)
-            db.commit()
-            return f"Usuario ID {usuario_id} eliminado correctamente."
-        return "Usuario no encontrado."
+        usuario.nombre_completo = user_data["nombre_completo"]
+        usuario.username = user_data["username"]
+        usuario.rol = user_data["rol"]
+
+        session.commit()  # Guardar los cambios
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
+
+    # Eliminar un usuario de la tabla usuarios
+def eliminar_usuario(user_id):
+    """Eliminar un usuario en la base de datos."""
+    session = SessionLocal()
+    try:
+        usuario = session.query(Table_usuario).filter_by(id=user_id).first()
+        if not usuario:
+            raise Exception("Usuario no encontrado.")
+
+        session.delete(usuario)
+        session.commit()  # Guardar los cambios
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 # Calcular antigüedad a partir de la fecha de inicio
 def calcular_antiguedad(fecha_inicio):

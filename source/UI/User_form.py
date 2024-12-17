@@ -4,12 +4,13 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import QDate,Qt
 from PyQt5.QtGui import QPixmap
 from datetime import datetime
-import os,shutil
+import os,shutil,re
 from ..database.crud import agregar_usuario, editar_usuario
 
 class UserFormDialog(QDialog):
-    def __init__(self, user_data=None, parent=None):
+    def __init__(self, logged_user,user_data=None, parent=None):
         super().__init__(parent)
+        self.usuario_logueado=logged_user
         #quitar icono ? de la ventana
         self.setWindowFlags(
         Qt.Window |
@@ -65,7 +66,9 @@ class UserFormDialog(QDialog):
         layout.addLayout(edad_layout)
 
         # CURP
-        self.curp_input = QLineEdit()
+        self.curp_input = QLineEdit(self)
+        self.curp_input.setPlaceholderText("CURP AQUI")
+        self.curp_input.textChanged.connect(self.convert_to_mayus)
         layout.addWidget(QLabel("CURP:"))
         layout.addWidget(self.curp_input)
 
@@ -114,6 +117,11 @@ class UserFormDialog(QDialog):
         # Si se edita un usuario, cargar datos previos
         if self.user_data:
             self.load_user_data()
+
+    def convert_to_mayus(self):
+        # Obtener el texto actual y convertirlo a mayúsculas
+        texto_actual = self.curp_input.text()
+        self.curp_input.setText(texto_actual.upper())
 
     def load_user_data(self):
         """Cargar datos del usuario en los campos del formulario."""
@@ -166,16 +174,15 @@ class UserFormDialog(QDialog):
         fecha_nacimiento = self.fecha_nacimiento_input.date().toString("yyyy-MM-dd")
         fecha_inicio = self.fecha_inicio_input.date().toString("yyyy-MM-dd")
         antiguedad = self.antiguedad_input.value()  # Se calculará automáticamente
-        curp = self.curp_input.text()
-        ultimo_editor = "admin"  # Este campo debe venir del usuario actual en sesión
-        """
+        curp = self.curp_input.text().upper()
+        
+        if not nombre_completo or not username or not password or not curp:
+            QMessageBox.warning(self, "Error", "Todos los campos obligatorios deben ser llenados.")
+            return
+
         # Validar CURP
         if not re.fullmatch(r'^[A-Z0-9]{18}$', curp):
             QMessageBox.warning(self, "Error", "La CURP debe tener 18 caracteres y solo contener letras mayúsculas y números.")
-            return
-        """
-        if not nombre_completo or not username or not password or not curp:
-            QMessageBox.warning(self, "Error", "Todos los campos obligatorios deben ser llenados.")
             return
 
         # Guardar la foto
@@ -186,53 +193,60 @@ class UserFormDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo guardar la foto: {str(e)}")
                 return
-        print({
-            "nombre_completo": nombre_completo,
-            "username": username,
-            "password": password,
-            "rol": rol,
-            "foto": foto_path,
-            "fecha_nacimiento": fecha_nacimiento,
-            "fecha_inicio": fecha_inicio,
-            "ultimo_editor": ultimo_editor
-        })
 
         # Llamada a la función agregar_usuario
         try:
-            agregar_usuario(
-                nombre_completo=nombre_completo,  # Usar el nombre correcto
-                username=username, 
-                password=password, 
-                rol=rol, 
-                foto=foto_path, 
-                fecha_nacimiento=fecha_nacimiento, 
-                fecha_inicio=fecha_inicio, 
-                ultimo_editor=ultimo_editor
-            )
-            QMessageBox.information(self, "Éxito", "Usuario agregado correctamente.")
+            ultimo_editor = self.usuario_logueado  # Asegúrate de tener esta variable en tu clase
+            if self.user_data:  # Editar usuario
+                editar_usuario(
+                    self.user_data.get("id"),
+                    nombre_completo=nombre_completo,
+                    username=username,
+                    password=password,
+                    rol=rol,
+                    foto=foto_path,
+                    fecha_nacimiento=fecha_nacimiento,
+                    fecha_inicio=fecha_inicio,
+                    curp=curp,
+                    ultimo_editor=ultimo_editor
+                )
+                QMessageBox.information(self, "Éxito", "Usuario editado correctamente.")
+            else:  # Agregar usuario
+                agregar_usuario(
+                    nombre_completo=nombre_completo,
+                    username=username,
+                    password=password,
+                    rol=rol,
+                    foto=foto_path,
+                    fecha_nacimiento=fecha_nacimiento,
+                    fecha_inicio=fecha_inicio,
+                    curp=curp,
+                    ultimo_editor=ultimo_editor
+                )
+                QMessageBox.information(self, "Éxito", "Usuario agregado correctamente.")
             self.accept()
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Ocurrió un error al guardar el usuario: {str(e)}")
-            raise e
+            QMessageBox.critical(self, "Error", f"Ocurrió un error: {str(e)}")
 
     def save_photo(self, username):
         """Guardar la foto seleccionada y devolver la ruta."""
-        # Permitir que el usuario seleccione una foto
-        foto_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar foto", "", "Images (*.png *.jpg *.jpeg)")
-        if not foto_path:
-            return None  # No se seleccionó ninguna foto
+        if not self.foto_path:
+            return None  # Si no se seleccionó foto, retorna None
 
         # Crear el directorio donde se guardarán las fotos si no existe
-        upload_dir = "uploads/fotos_usuarios"
+        upload_dir = os.path.join("source", "imagenes", "usuarios")
         os.makedirs(upload_dir, exist_ok=True)
 
         # Obtener la extensión del archivo seleccionado
-        ext = os.path.splitext(foto_path)[1]
+        ext = os.path.splitext(self.foto_path)[1]
         destino = os.path.join(upload_dir, f"{username}{ext}")
 
         # Copiar la foto al directorio de destino
         try:
-            shutil.copy(foto_path, destino)
+            # Usa la ruta de la foto original como bytes
+            with open(self.foto_path, 'rb') as src_file:
+                with open(destino, 'wb') as dest_file:
+                    shutil.copyfileobj(src_file, dest_file)  # Copiar contenido
             return destino  # Devolver la ruta donde se guardó la foto
         except Exception as e:
             raise Exception(f"Error al guardar la foto: {str(e)}")

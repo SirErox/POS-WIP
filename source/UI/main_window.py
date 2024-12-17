@@ -4,9 +4,11 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt,QPropertyAnimation,QSize
 from .user_control import UserControlWindow
 class MainWindow(QMainWindow):
-    def __init__(self, usuario):
+    def __init__(self,usuario):
         super().__init__()
-        self.usuario = usuario
+        self.usuario_logueado = usuario.username
+        self.usuario=usuario
+        #self.usuario=usuario
         self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre_completo}")
         self.setWindowIcon(QIcon('source/icons/logo.ico'))  
         self.resize(800, 600)
@@ -146,7 +148,7 @@ class MainWindow(QMainWindow):
 
     def open_user_control(self):
         if not self.user_window or not self.user_window.isVisible():
-            self.user_window = UserControlWindow()
+            self.user_window = UserControlWindow(self.usuario_logueado)
             self.user_window.show()
         else:
             self.user_window.raise_()  # Traer la ventana al frente si ya está abierta
