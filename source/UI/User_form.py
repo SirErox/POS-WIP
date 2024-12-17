@@ -159,7 +159,7 @@ class UserFormDialog(QDialog):
 
     def save_user(self):
         """Guardar usuario."""
-        nombre = self.nombre_input.text()
+        nombre_completo = self.nombre_input.text()
         username = self.username_input.text()
         password = self.password_input.text()
         rol = self.rol_input.currentText()
@@ -174,7 +174,7 @@ class UserFormDialog(QDialog):
             QMessageBox.warning(self, "Error", "La CURP debe tener 18 caracteres y solo contener letras mayúsculas y números.")
             return
         """
-        if not nombre or not username or not password or not curp:
+        if not nombre_completo or not username or not password or not curp:
             QMessageBox.warning(self, "Error", "Todos los campos obligatorios deben ser llenados.")
             return
 
@@ -190,7 +190,10 @@ class UserFormDialog(QDialog):
         # Llamada a la función agregar_usuario
         try:
             agregar_usuario(
-                nombre, username, password, rol, 
+                Nombre_completo=nombre_completo,  # Usar el nombre correcto
+                username=username, 
+                password=password, 
+                rol=rol, 
                 foto=foto_path, 
                 fecha_nacimiento=fecha_nacimiento, 
                 fecha_inicio=fecha_inicio, 
@@ -200,6 +203,7 @@ class UserFormDialog(QDialog):
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Ocurrió un error al guardar el usuario: {str(e)}")
+            raise e
 
     def save_photo(self, username):
         """Guardar la foto seleccionada y devolver la ruta."""

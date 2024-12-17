@@ -16,7 +16,7 @@ def agregar_usuario(Nombre_completo, username, password, rol, foto=None, fecha_n
     sesion = SessionLocal()
     try:
         nuevo_usuario = Table_usuario(
-            nombre=Nombre_completo,
+            Nombre_completo=Nombre_completo,
             username=username,
             password=hashear_contra(password),
             rol=rol,
