@@ -33,7 +33,7 @@ class UserFormDialog(QDialog):
         self.password_input = QLineEdit()
         self.password_input.setEchoMode(QLineEdit.Password)  # Ocultar texto
         self.rol_input = QComboBox()
-        self.rol_input.addItems(["Administrador", "Cajero"])
+        self.rol_input.addItems(["administrador", "Cajero"])
 
         layout.addWidget(QLabel("Nombre Completo:"))
         layout.addWidget(self.nombre_input)
@@ -186,11 +186,21 @@ class UserFormDialog(QDialog):
             except Exception as e:
                 QMessageBox.critical(self, "Error", f"No se pudo guardar la foto: {str(e)}")
                 return
+        print({
+            "nombre_completo": nombre_completo,
+            "username": username,
+            "password": password,
+            "rol": rol,
+            "foto": foto_path,
+            "fecha_nacimiento": fecha_nacimiento,
+            "fecha_inicio": fecha_inicio,
+            "ultimo_editor": ultimo_editor
+        })
 
         # Llamada a la función agregar_usuario
         try:
             agregar_usuario(
-                Nombre_completo=nombre_completo,  # Usar el nombre correcto
+                nombre_completo=nombre_completo,  # Usar el nombre correcto
                 username=username, 
                 password=password, 
                 rol=rol, 

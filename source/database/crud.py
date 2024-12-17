@@ -1,5 +1,5 @@
 from .models import Table_usuario
-from database import SessionLocal
+from source.database.database import SessionLocal
 from .security import hashear_contra
 from datetime import datetime, date
 # Crear una sesión global para la base de datos
@@ -7,20 +7,22 @@ db = SessionLocal()
 
 # Función para calcular la edad a partir de la fecha de nacimiento
 def calcular_edad(fecha_nacimiento):
-    hoy = date.today()
-    edad = hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
-    return edad
+    if isinstance(fecha_nacimiento, str):
+        # Convierte el texto a un objeto datetime.date
+        fecha_nacimiento = datetime.strptime(fecha_nacimiento, "%Y-%m-%d").date()
+    hoy = datetime.today().date()
+    return hoy.year - fecha_nacimiento.year - ((hoy.month, hoy.day) < (fecha_nacimiento.month, fecha_nacimiento.day))
 
 # Para agregar usuarios a la tabla usuarios
-def agregar_usuario(Nombre_completo, username, password, rol, foto=None, fecha_nacimiento=None, fecha_inicio=None, ultimo_editor=None):
+def agregar_usuario(nombre_completo, username, password, rol, foto=None, fecha_nacimiento=None, fecha_inicio=None, ultimo_editor=None):
     sesion = SessionLocal()
     try:
         nuevo_usuario = Table_usuario(
-            Nombre_completo=Nombre_completo,
+            nombre_completo=nombre_completo,
             username=username,
             password=hashear_contra(password),
             rol=rol,
-            foto=foto,
+            foto_perfil=foto,
             fecha_nacimiento=fecha_nacimiento,
             fecha_inicio=fecha_inicio,
             antiguedad=calcular_antiguedad(fecha_inicio),

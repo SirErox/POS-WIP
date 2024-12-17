@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import QDate,Qt
 from PyQt5.QtGui import QIcon
-from database import SessionLocal
+from source.database.database import SessionLocal
 from .User_form import UserFormDialog
 from ..database.crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios,registrar_actividad
 class UserControlWindow(QWidget):

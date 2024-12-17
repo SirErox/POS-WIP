@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QDialog,QMessageBox
 from source.UI.login_ui import LoginWindow
 from source.UI.main_window import MainWindow
-from database import init_db
+from source.database.database import init_db
 class main:
     def __init__(self):
         self.app = QApplication(sys.argv)
