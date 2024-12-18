@@ -41,6 +41,15 @@ jobs:
           sleep 1
         done
 
+    - name: Initialize database
+      env:
+        DB_USER: root
+        DB_PASSWORD: root
+        DB_HOST: 127.0.0.1
+        DB_NAME: test_db
+      run: |
+        python init_db.py
+
     - name: Run tests
       env:
         DB_USER: root
