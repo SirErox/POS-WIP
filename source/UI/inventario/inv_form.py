@@ -3,15 +3,22 @@ from PyQt5.QtWidgets import (
     QPushButton, QHBoxLayout, QDialog, QFormLayout, QLineEdit,
     QComboBox, QSpinBox, QMessageBox
 )
+from PyQt5.QtCore import Qt
+from ...database.database import SessionLocal
 from ...database.crud import agregar_producto, actualizar_producto,buscar_producto
 class FormularioProducto(QDialog):
-    def __init__(self, db, modo="agregar", producto_id=None):
+    def __init__(self, producto_id=None):
         super().__init__()
-        self.db = db
-        self.modo = modo
         self.producto_id = producto_id
-        self.setWindowTitle("Agregar Producto" if modo == "agregar" else "Editar Producto")
+        self.setWindowTitle("Agregar Producto" if producto_id == None else "Editar Producto")
         self.resize(400, 300)
+         #quitar icono ? de la ventana
+        self.setWindowFlags(
+        Qt.Window |
+        Qt.CustomizeWindowHint |
+        Qt.WindowTitleHint |
+        Qt.WindowCloseButtonHint 
+        )
         
         layout = QFormLayout(self)
         
@@ -51,13 +58,14 @@ class FormularioProducto(QDialog):
         self.boton_cancelar.clicked.connect(self.reject)
         
         # Si es modo editar, carga los datos existentes
-        if modo == "editar":
+        if producto_id is not None:
             self.cargar_datos()
 
     def cargar_datos(self):
+        session=SessionLocal()
         #Carga los datos del producto en los campos del formulario.
         try:
-            producto = buscar_producto(self.db, self.producto_id)[0]
+            producto = buscar_producto(session,self.producto_id)[0]
             self.nombre.setText(producto["nombre"])
             self.descripcion.setText(producto["descripcion"])
             self.categoria.setText(producto["categoria"])
@@ -69,13 +77,15 @@ class FormularioProducto(QDialog):
             self.activo.setCurrentText("Sí" if producto["activo"] else "No")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al cargar datos: {e}")
-
+        finally:
+            session.close()
     def guardar_producto(self):
         #Guarda o actualiza el producto en la base de datos.
+        session=SessionLocal()
         try:
-            if self.modo == "agregar":
+            if self.producto_id is None:
                 agregar_producto(
-                    self.db,
+                    session,
                     self.nombre.text(),
                     self.descripcion.text(),
                     self.categoria.text(),
@@ -89,7 +99,7 @@ class FormularioProducto(QDialog):
                 QMessageBox.information(self, "Éxito", "Producto agregado correctamente.")
             else:
                 actualizar_producto(
-                    self.db,
+                    session,
                     self.producto_id,
                     nombre=self.nombre.text(),
                     descripcion=self.descripcion.text(),
@@ -105,3 +115,5 @@ class FormularioProducto(QDialog):
             self.accept()
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo guardar el producto: {e}")
+        finally:
+            session.close()
