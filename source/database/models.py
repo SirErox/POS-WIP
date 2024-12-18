@@ -34,6 +34,7 @@ class Inventario(Base):
     cantidad_stock = Column(Integer, default=0)
     precio = Column(DECIMAL(10, 2), nullable=False)
     codigo_barras = Column(String(100), unique=True)
+    foto = Column(String(255), nullable=True)  # Nueva columna para la foto
     activo = Column(Boolean, default=True)
     fecha_creacion = Column(DateTime, server_default=func.now())
     fecha_actualizacion = Column(DateTime, server_default=func.now(), onupdate=func.now())

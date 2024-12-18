@@ -1,3 +1,4 @@
+import os
 from .models import Table_usuario,Inventario
 from sqlalchemy.orm import Session
 from source.database.database import SessionLocal
@@ -103,7 +104,21 @@ def calcular_antiguedad(fecha_inicio):
         return antiguedad
     return 0
 
-def agregar_producto(session: Session, nombre_producto, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad_stock, activo):
+def agregar_producto(session: Session, nombre_producto, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad_stock, activo, foto=None):
+    if foto:
+        # Obtener la extensión del archivo
+        _, extension = os.path.splitext(foto)
+        # Renombrar la foto
+        nueva_foto_path = f"fotos/{nombre_producto}_item{extension}"
+        # Crear el directorio si no existe
+        os.makedirs(os.path.dirname(nueva_foto_path), exist_ok=True)
+        # Eliminar el archivo de destino si ya existe
+        if os.path.exists(nueva_foto_path):
+            os.remove(nueva_foto_path)
+        # Mover la foto a la nueva ubicación
+        os.rename(foto, nueva_foto_path)
+        foto = nueva_foto_path
+
     nuevo_producto = Inventario(
         nombre_producto=nombre_producto,
         descripcion=descripcion,
@@ -113,7 +128,8 @@ def agregar_producto(session: Session, nombre_producto, descripcion, categoria, 
         precio=precio,
         codigo_barras=codigo_barras,
         cantidad_stock=cantidad_stock,
-        activo=activo
+        activo=activo,
+        foto=foto
     )
     session.add(nuevo_producto)
     session.commit()
@@ -134,6 +150,20 @@ def listar_inventario(db, activo=None):
 
 def actualizar_producto(session: Session, producto_id, **kwargs):
     producto = session.query(Inventario).filter(Inventario.id == producto_id).first()
+    if 'foto' in kwargs and kwargs['foto']:
+        # Obtener la extensión del archivo
+        _, extension = os.path.splitext(kwargs['foto'])
+        # Renombrar la foto
+        nueva_foto_path = f"fotos/{kwargs['nombre_producto']}_item{extension}"
+        # Crear el directorio si no existe
+        os.makedirs(os.path.dirname(nueva_foto_path), exist_ok=True)
+        # Eliminar el archivo de destino si ya existe
+        if os.path.exists(nueva_foto_path):
+            os.remove(nueva_foto_path)
+        # Mover la foto a la nueva ubicación
+        os.rename(kwargs['foto'], nueva_foto_path)
+        kwargs['foto'] = nueva_foto_path
+
     for key, value in kwargs.items():
         setattr(producto, key, value)
     session.commit()
