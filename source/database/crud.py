@@ -105,7 +105,7 @@ def calcular_antiguedad(fecha_inicio):
     return 0
 
 def agregar_producto(session: Session, nombre_producto, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad_stock, activo, foto=None):
-    if foto:
+    if foto and os.path.exists(foto):
         # Obtener la extensión del archivo
         _, extension = os.path.splitext(foto)
         # Renombrar la foto
@@ -150,7 +150,7 @@ def listar_inventario(db, activo=None):
 
 def actualizar_producto(session: Session, producto_id, **kwargs):
     producto = session.query(Inventario).filter(Inventario.id == producto_id).first()
-    if 'foto' in kwargs and kwargs['foto']:
+    if 'foto' in kwargs and kwargs['foto'] and os.path.exists(kwargs['foto']):
         # Obtener la extensión del archivo
         _, extension = os.path.splitext(kwargs['foto'])
         # Renombrar la foto

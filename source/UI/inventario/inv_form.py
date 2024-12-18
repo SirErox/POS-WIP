@@ -104,14 +104,17 @@ class FormularioProducto(QDialog):
         session = SessionLocal()
         try:
             nombre_producto = self.nombre.text()
-            if self.foto_path:
+            if self.foto_path and os.path.exists(self.foto_path):
                 # Obtener la extensión del archivo
                 _, extension = os.path.splitext(self.foto_path)
                 # Renombrar la foto
-                nueva_foto_path = f"fotos/{nombre_producto}_item{extension}"
+                nueva_foto_path = f"imagenes/productos/{nombre_producto}_item{extension}"
                 # Crear el directorio si no existe
                 os.makedirs(os.path.dirname(nueva_foto_path), exist_ok=True)
-                # Guardar la foto en la nueva ubicación
+                # Eliminar el archivo de destino si ya existe
+                if os.path.exists(nueva_foto_path):
+                    os.remove(nueva_foto_path)
+                # Mover la foto a la nueva ubicación
                 os.rename(self.foto_path, nueva_foto_path)
                 self.foto_path = nueva_foto_path
 
