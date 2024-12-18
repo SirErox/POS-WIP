@@ -38,11 +38,8 @@ class Inventario(Base):
     fecha_creacion = Column(DateTime, server_default=func.now())
     fecha_actualizacion = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-
     def __repr__(self):
-        return (f"<Inventario(id={self.id}, nombre={self.nombre}, tipo={self.tipo}, "
-                f"stock={self.stock}, precio={self.precio}, costo={self.costo}, "
-                f"proveedor={self.proveedor}, activo={self.activo})>")
+        return f"<Inventario(nombre_producto={self.nombre_producto}, categoria={self.categoria})>"
 
 
 # Event Listener para calcular edad y antigüedad automáticamente

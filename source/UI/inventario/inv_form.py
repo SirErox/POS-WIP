@@ -1,16 +1,16 @@
 ### **Formulario para Agregar/Editar Productos**
 from PyQt5.QtWidgets import (
-    QPushButton, QHBoxLayout, QDialog, QFormLayout, QLineEdit,
-    QComboBox, QSpinBox, QMessageBox
+    QDialog, QFormLayout, QLineEdit, QComboBox, QSpinBox, QPushButton, QHBoxLayout, QMessageBox
 )
 from PyQt5.QtCore import Qt
 from ...database.database import SessionLocal
-from ...database.crud import agregar_producto, actualizar_producto,buscar_producto
+from ...database.crud import agregar_producto, actualizar_producto, buscar_producto
+
 class FormularioProducto(QDialog):
     def __init__(self, producto_id=None):
         super().__init__()
         self.producto_id = producto_id
-        self.setWindowTitle("Agregar Producto" if producto_id == None else "Editar Producto")
+        self.setWindowTitle("Agregar Producto" if producto_id is None else "Editar Producto")
         self.resize(400, 300)
          #quitar icono ? de la ventana
         self.setWindowFlags(
@@ -27,7 +27,7 @@ class FormularioProducto(QDialog):
         self.descripcion = QLineEdit()
         self.categoria = QLineEdit()
         self.tipo = QComboBox()
-        self.tipo.addItems(["Físico", "Servicio"])
+        self.tipo.addItems(["producto", "servicio"])
         self.unidad = QLineEdit()
         self.precio = QLineEdit()
         self.codigo_barras = QLineEdit()
@@ -62,26 +62,25 @@ class FormularioProducto(QDialog):
             self.cargar_datos()
 
     def cargar_datos(self):
-        session=SessionLocal()
-        #Carga los datos del producto en los campos del formulario.
+        session = SessionLocal()
         try:
-            producto = buscar_producto(session,self.producto_id)[0]
-            self.nombre.setText(producto["nombre"])
-            self.descripcion.setText(producto["descripcion"])
-            self.categoria.setText(producto["categoria"])
-            self.tipo.setCurrentText("Físico" if producto["tipo"] == "Físico" else "Servicio")
-            self.unidad.setText(producto["unidad_medida"])
-            self.precio.setText(str(producto["precio"]))
-            self.codigo_barras.setText(producto["codigo_barras"])
-            self.cantidad.setValue(producto["cantidad"])
-            self.activo.setCurrentText("Sí" if producto["activo"] else "No")
+            producto = buscar_producto(session, self.producto_id)
+            self.nombre.setText(producto.nombre_producto)
+            self.descripcion.setText(producto.descripcion)
+            self.categoria.setText(producto.categoria)
+            self.tipo.setCurrentText(producto.tipo)
+            self.unidad.setText(producto.unidad_medida)
+            self.precio.setText(str(producto.precio))
+            self.codigo_barras.setText(producto.codigo_barras)
+            self.cantidad.setValue(producto.cantidad_stock)
+            self.activo.setCurrentText("Sí" if producto.activo else "No")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al cargar datos: {e}")
         finally:
             session.close()
+
     def guardar_producto(self):
-        #Guarda o actualiza el producto en la base de datos.
-        session=SessionLocal()
+        session = SessionLocal()
         try:
             if self.producto_id is None:
                 agregar_producto(
@@ -101,14 +100,14 @@ class FormularioProducto(QDialog):
                 actualizar_producto(
                     session,
                     self.producto_id,
-                    nombre=self.nombre.text(),
+                    nombre_producto=self.nombre.text(),
                     descripcion=self.descripcion.text(),
                     categoria=self.categoria.text(),
                     tipo=self.tipo.currentText(),
                     unidad_medida=self.unidad.text(),
                     precio=float(self.precio.text()),
                     codigo_barras=self.codigo_barras.text(),
-                    cantidad=self.cantidad.value(),
+                    cantidad_stock=self.cantidad.value(),
                     activo=self.activo.currentText() == "Sí"
                 )
                 QMessageBox.information(self, "Éxito", "Producto actualizado correctamente.")

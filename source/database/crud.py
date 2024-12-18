@@ -103,16 +103,16 @@ def calcular_antiguedad(fecha_inicio):
         return antiguedad
     return 0
 
-def agregar_producto(session: Session, nombre, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad, activo=True):
+def agregar_producto(session: Session, nombre_producto, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad_stock, activo):
     nuevo_producto = Inventario(
-        nombre_producto=nombre,
+        nombre_producto=nombre_producto,
         descripcion=descripcion,
         categoria=categoria,
         tipo=tipo,
         unidad_medida=unidad_medida,
         precio=precio,
         codigo_barras=codigo_barras,
-        cantidad_stock=cantidad,
+        cantidad_stock=cantidad_stock,
         activo=activo
     )
     session.add(nuevo_producto)
