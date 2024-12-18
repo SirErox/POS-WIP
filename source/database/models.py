@@ -1,5 +1,5 @@
 from sqlalchemy import (Column, Integer, String, Date, TIMESTAMP, func, event,
-                        Float,Boolean,DateTime)
+                        Boolean,DateTime,Enum,DECIMAL,Text)
 from datetime import datetime
 from source.database.database import Base
 from source.Utils.helpers import calcular_edad,calcular_antiguedad
@@ -26,18 +26,18 @@ class Inventario(Base):
     __tablename__ = 'inventario'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    nombre = Column(String(100), nullable=False)
-    tipo = Column(String(20), nullable=False)  # 'Producto' o 'Servicio'
-    stock = Column(Integer, nullable=True)  # NULL para servicios
-    unidad = Column(String(20), nullable=True)  # Unidad de medida
-    codigo_barras = Column(String(50), nullable=True)
-    precio = Column(Float, nullable=False)
-    costo = Column(Float, nullable=True)  # Costo del producto
-    proveedor = Column(String(100), nullable=True)
-    descripcion = Column(String(255), nullable=True)
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
-    fecha_actualizacion = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    activo = Column(Boolean, default=True)  # Estado activo/inactivo
+    nombre_producto = Column(String(255), nullable=False)
+    descripcion = Column(Text,nullable=True)
+    categoria = Column(String(100),nullable=True)
+    tipo = Column(Enum('producto', 'servicio'), nullable=False, default='producto')
+    unidad_medida = Column(String(50), default='pieza')
+    cantidad_stock = Column(Integer, default=0)
+    precio = Column(DECIMAL(10, 2), nullable=False)
+    codigo_barras = Column(String(100), unique=True)
+    activo = Column(Boolean, default=True)
+    fecha_creacion = Column(DateTime, server_default=func.now())
+    fecha_actualizacion = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
 
     def __repr__(self):
         return (f"<Inventario(id={self.id}, nombre={self.nombre}, tipo={self.tipo}, "

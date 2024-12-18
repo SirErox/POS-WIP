@@ -19,7 +19,7 @@ class UserFormDialog(QDialog):
         Qt.WindowCloseButtonHint 
         )
         self.setWindowTitle("Agregar Usuario" if not user_data else "Editar Usuario")
-        self.setGeometry(400, 200, 500, 600)  # Ajustar tamaño de ventana
+        self.resize(500, 600)  # Ajustar tamaño de ventana
 
         self.user_data = user_data
         self.foto_path = ""  # Para guardar la ruta de la foto

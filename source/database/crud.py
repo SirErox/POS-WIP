@@ -101,3 +101,84 @@ def calcular_antiguedad(fecha_inicio):
         antiguedad = (datetime.now() - fecha_inicio_dt).days // 365  # Convertir a años
         return antiguedad
     return 0
+
+def agregar_producto(db, nombre, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad, activo=True):
+    query = """
+    INSERT INTO inventario 
+    (nombre, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad, activo) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    """
+    values = (nombre, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad, int(activo))
+    cursor = db.cursor()
+    cursor.execute(query, values)
+    db.commit()
+
+def listar_inventario(db, activo=None):
+    query = "SELECT * FROM inventario"
+    if activo is not None:
+        query += " WHERE activo = %s"
+        values = (int(activo),)
+    else:
+        values = ()
+    
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(query, values)
+    return cursor.fetchall()
+
+def actualizar_producto(db, producto_id, nombre=None, descripcion=None, categoria=None, tipo=None, unidad_medida=None, precio=None, codigo_barras=None, cantidad=None, activo=None):
+    query = "UPDATE inventario SET "
+    fields = []
+    values = []
+    
+    if nombre is not None:
+        fields.append("nombre = %s")
+        values.append(nombre)
+    if descripcion is not None:
+        fields.append("descripcion = %s")
+        values.append(descripcion)
+    if categoria is not None:
+        fields.append("categoria = %s")
+        values.append(categoria)
+    if tipo is not None:
+        fields.append("tipo = %s")
+        values.append(tipo)
+    if unidad_medida is not None:
+        fields.append("unidad_medida = %s")
+        values.append(unidad_medida)
+    if precio is not None:
+        fields.append("precio = %s")
+        values.append(precio)
+    if codigo_barras is not None:
+        fields.append("codigo_barras = %s")
+        values.append(codigo_barras)
+    if cantidad is not None:
+        fields.append("cantidad = %s")
+        values.append(cantidad)
+    if activo is not None:
+        fields.append("activo = %s")
+        values.append(int(activo))
+    
+    query += ", ".join(fields) + " WHERE id = %s"
+    values.append(producto_id)
+    
+    cursor = db.cursor()
+    cursor.execute(query, values)
+    db.commit()
+
+def eliminar_producto(db, producto_id):
+    query = "UPDATE inventario SET activo = 0 WHERE id = %s"
+    cursor = db.cursor()
+    cursor.execute(query, (producto_id,))
+    db.commit()
+
+def buscar_producto(db, keyword):
+    query = """
+    SELECT * FROM inventario 
+    WHERE nombre LIKE %s OR categoria LIKE %s
+    """
+    like_keyword = f"%{keyword}%"
+    values = (like_keyword, like_keyword)
+    
+    cursor = db.cursor(dictionary=True)
+    cursor.execute(query, values)
+    return cursor.fetchall()

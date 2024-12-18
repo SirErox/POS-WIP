@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import(QMainWindow, QVBoxLayout, QPushButton, QLabel, QWidg
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt,QPropertyAnimation,QSize
 from .user_control import UserControlWindow
+from ..UI.inventario.inv_control import VentanaInventario
 class MainWindow(QMainWindow):
     def __init__(self,usuario):
         super().__init__()
@@ -50,6 +51,7 @@ class MainWindow(QMainWindow):
 
         if self.usuario.rol == "administrador":
             self.add_menu_button("Control de Usuarios", 'source/icons/users.png', self.open_user_control)
+            self.add_menu_button("Inventario", 'source/icons/inventario.png', self.abrir_gestion_inventario)
 
         # Menú expandible
         self.menu_expanded = False
@@ -157,5 +159,6 @@ class MainWindow(QMainWindow):
         QMessageBox.information(self, "Ventas", "Abriendo la ventana de ventas...")
 
     def abrir_gestion_inventario(self):
-        QMessageBox.information(self, "Gestión de Inventario", "Abriendo la gestión de inventario...")
+        self.ventana_inventario = VentanaInventario()
+        self.ventana_inventario.show()
 
