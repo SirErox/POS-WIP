@@ -4,6 +4,7 @@ import os, sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from source.database.database import SessionLocal
 from source.database.models import Inventario 
+
 @pytest.fixture
 def setup_db():
     session = SessionLocal()
@@ -15,7 +16,7 @@ def setup_db():
     session.query(Inventario).delete()
     session.commit()
     session.close()
-"""
+
 def test_actualizar_producto(setup_db):
     session = setup_db
 
@@ -41,7 +42,7 @@ def test_actualizar_producto(setup_db):
     # Verificar que el cambio se haya aplicado
     producto_actualizado = session.query(Inventario).filter_by(id=producto.id).first()
     assert producto_actualizado.precio == 120.0
-"""
+
 def test_eliminar_producto(setup_db):
     session = setup_db
 
