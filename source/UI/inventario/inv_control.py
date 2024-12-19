@@ -137,19 +137,13 @@ class VentanaInventario(QWidget):
     def eliminar_producto(self, producto_id):
         session = SessionLocal()
         try:
-            usuario_id = 1  # ID del usuario que realiza la acción, ajustar según sea necesario
-            eliminar_producto(session, usuario_id, producto_id)
+            eliminar_producto(session, self.usuario_id, producto_id)
             QMessageBox.information(self, "Éxito", f"Producto con ID {producto_id} marcado como inactivo")
-            self.actualizar_tabla()  # Recargar la tabla de inventario
+            self.load_items()  # Recargar la tabla de inventario
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo eliminar el producto: {e}")
         finally:
             session.close()
-
-    def agregar_producto(self):
-        form = FormularioProducto()
-        if form.exec_() == QDialog.Accepted:
-            self.actualizar_tabla()
 
     def editar_producto(self, producto_id):
         form = FormularioProducto(producto_id)
@@ -161,5 +155,5 @@ class VentanaInventario(QWidget):
         self.ventana_movimientos.show()
 
     def abrir_ventana_reportes(self):
-        self.ventana_reportes = VentanaReportes()
+        self.ventana_reportes = VentanaReportes(self.usuario_id)
         self.ventana_reportes.show()
