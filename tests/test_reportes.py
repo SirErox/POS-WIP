@@ -22,11 +22,12 @@ def session():
 
 @pytest.fixture
 def app():
-    app = QApplication(sys.argv)
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
     yield app
-    app.quit()
 
-def test_generar_reporte_inventario_excel(session, app):
+def test_generar_reporte_inventario_excel(session, app, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -43,13 +44,14 @@ def test_generar_reporte_inventario_excel(session, app):
     session.commit()
 
     ventana = VentanaReportes()
+    qtbot.addWidget(ventana)
     ventana.tipo_reporte.setCurrentText("Inventario Actual")
     ventana.formato_reporte.setCurrentText("Excel")
     ventana.generar_reporte()
 
     assert os.path.exists('reporte_inventario_actual.xlsx')
 
-def test_generar_reporte_inventario_pdf(session, app):
+def test_generar_reporte_inventario_pdf(session, app, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -66,13 +68,14 @@ def test_generar_reporte_inventario_pdf(session, app):
     session.commit()
 
     ventana = VentanaReportes()
+    qtbot.addWidget(ventana)
     ventana.tipo_reporte.setCurrentText("Inventario Actual")
     ventana.formato_reporte.setCurrentText("PDF")
     ventana.generar_reporte()
 
     assert os.path.exists('reporte_inventario_actual.pdf')
 
-def test_generar_reporte_movimientos_excel(session, app):
+def test_generar_reporte_movimientos_excel(session, app, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -98,13 +101,14 @@ def test_generar_reporte_movimientos_excel(session, app):
     session.commit()
 
     ventana = VentanaReportes()
+    qtbot.addWidget(ventana)
     ventana.tipo_reporte.setCurrentText("Movimientos de Inventario")
     ventana.formato_reporte.setCurrentText("Excel")
     ventana.generar_reporte()
 
     assert os.path.exists('reporte_movimientos_inventario.xlsx')
 
-def test_generar_reporte_movimientos_pdf(session, app):
+def test_generar_reporte_movimientos_pdf(session, app, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -130,6 +134,7 @@ def test_generar_reporte_movimientos_pdf(session, app):
     session.commit()
 
     ventana = VentanaReportes()
+    qtbot.addWidget(ventana)
     ventana.tipo_reporte.setCurrentText("Movimientos de Inventario")
     ventana.formato_reporte.setCurrentText("PDF")
     ventana.generar_reporte()
