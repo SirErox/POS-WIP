@@ -1,5 +1,5 @@
 import os
-from .models import Table_usuario,Inventario
+from .models import Table_usuario,Inventario,MovimientoInventario
 from sqlalchemy.orm import Session
 from source.database.database import SessionLocal
 from .security import hashear_contra
@@ -178,3 +178,21 @@ def eliminar_producto(session: Session, producto_id):
         producto.activo = False
         session.commit()
     return producto
+
+def registrar_movimiento(session: Session, producto_id, tipo_movimiento, cantidad, descripcion=None):
+    movimiento = MovimientoInventario(
+        producto_id=producto_id,
+        tipo_movimiento=tipo_movimiento,
+        cantidad=cantidad,
+        descripcion=descripcion
+    )
+    session.add(movimiento)
+    session.commit()
+    session.refresh(movimiento)
+    return movimiento.id
+
+def obtener_movimientos(session: Session, producto_id=None):
+    query = session.query(MovimientoInventario)
+    if producto_id:
+        query = query.filter(MovimientoInventario.producto_id == producto_id)
+    return query.all()

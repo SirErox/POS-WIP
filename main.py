@@ -38,4 +38,10 @@ class main:
 
 if __name__ == "__main__":
     app= main()
+    try:
+        with open('source/styles/main.css', 'r') as f:
+            app.app.setStyleSheet(f.read())
+    except FileNotFoundError:
+        print("Archivo de estilo no encontrado: login.css")
+
     app.run()

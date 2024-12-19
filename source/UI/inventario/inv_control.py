@@ -9,6 +9,8 @@ from ...UI.inventario.inv_form import FormularioProducto
 from ...database.database import SessionLocal
 from ...database.models import Inventario
 from ...database.crud import actualizar_producto
+from ...UI.inventario.inv_mov import VentanaMovimientos
+from ...UI.reportes.inv_report import VentanaReportes
 
 class VentanaInventario(QWidget):
     def __init__(self):
@@ -21,6 +23,16 @@ class VentanaInventario(QWidget):
         titulo.setAlignment(Qt.AlignCenter)
         titulo.setStyleSheet("font-size: 18px; font-weight: bold; margin-bottom: 10px;")
         layout.addWidget(titulo)
+        
+        # Botones para abrir otras ventanas
+        botones_superiores_layout = QHBoxLayout()
+        self.boton_movimientos = QPushButton("Ver Movimientos")
+        self.boton_movimientos.clicked.connect(self.abrir_ventana_movimientos)
+        self.boton_reportes = QPushButton("Generar Reportes")
+        self.boton_reportes.clicked.connect(self.abrir_ventana_reportes)
+        botones_superiores_layout.addWidget(self.boton_movimientos)
+        botones_superiores_layout.addWidget(self.boton_reportes)
+        layout.addLayout(botones_superiores_layout)
         
         # Controles de búsqueda
         self.barra_busqueda = QLineEdit()
@@ -126,3 +138,11 @@ class VentanaInventario(QWidget):
         form = FormularioProducto(producto_id)
         if form.exec_() == QDialog.Accepted:
             self.actualizar_tabla()
+
+    def abrir_ventana_movimientos(self):
+        self.ventana_movimientos = VentanaMovimientos()
+        self.ventana_movimientos.show()
+
+    def abrir_ventana_reportes(self):
+        self.ventana_reportes = VentanaReportes()
+        self.ventana_reportes.show()

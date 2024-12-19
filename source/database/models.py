@@ -1,8 +1,9 @@
-from sqlalchemy import (Column, Integer, String, Date, TIMESTAMP, func, event,
+from sqlalchemy import (Column, ForeignKey, Integer, String, Date, TIMESTAMP, func, event,
                         Boolean,DateTime,Enum,DECIMAL,Text)
 from datetime import datetime
 from source.database.database import Base
-from source.Utils.helpers import calcular_edad,calcular_antiguedad
+from source.Utils.helpers import calcular_edad,calcular_antiguedad 
+from sqlalchemy.orm import relationship
 
 class Table_usuario(Base):
     __tablename__='usuarios'
@@ -52,3 +53,17 @@ def calcular_datos_automaticos(mapper, connection, target):
         target.edad = calcular_edad(target.fecha_nacimiento)
     if target.fecha_inicio:
         target.antiguedad = calcular_antiguedad(target.fecha_inicio)
+
+class MovimientoInventario(Base):
+    __tablename__ = 'movimientos_inventario'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    producto_id = Column(Integer, ForeignKey('inventario.id'), nullable=False)
+    tipo_movimiento = Column(String(50), nullable=False)  # 'entrada' o 'salida'
+    cantidad = Column(Integer, nullable=False)
+    fecha_movimiento = Column(DateTime, server_default=func.now())
+    descripcion = Column(String(255), nullable=True)
+
+    producto = relationship("Inventario", back_populates="movimientos")
+
+Inventario.movimientos = relationship("MovimientoInventario", order_by=MovimientoInventario.id, back_populates="producto")
