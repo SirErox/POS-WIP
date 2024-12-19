@@ -4,7 +4,6 @@ from source.database.database import SessionLocal
 from source.database.models import Inventario, MovimientoInventario
 from source.UI.reportes.inv_report import VentanaReportes
 from PyQt5.QtWidgets import QApplication
-import sys
 
 @pytest.fixture
 def session():
@@ -20,14 +19,14 @@ def session():
     session.commit()
     session.close()
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def app():
     app = QApplication.instance()
     if app is None:
         app = QApplication([])
     yield app
 
-def test_generar_reporte_inventario_excel(session, app, qtbot):
+def test_generar_reporte_inventario_excel(session, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -51,7 +50,7 @@ def test_generar_reporte_inventario_excel(session, app, qtbot):
 
     assert os.path.exists('reporte_inventario_actual.xlsx')
 
-def test_generar_reporte_inventario_pdf(session, app, qtbot):
+def test_generar_reporte_inventario_pdf(session, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -75,7 +74,7 @@ def test_generar_reporte_inventario_pdf(session, app, qtbot):
 
     assert os.path.exists('reporte_inventario_actual.pdf')
 
-def test_generar_reporte_movimientos_excel(session, app, qtbot):
+def test_generar_reporte_movimientos_excel(session, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
@@ -108,7 +107,7 @@ def test_generar_reporte_movimientos_excel(session, app, qtbot):
 
     assert os.path.exists('reporte_movimientos_inventario.xlsx')
 
-def test_generar_reporte_movimientos_pdf(session, app, qtbot):
+def test_generar_reporte_movimientos_pdf(session, qtbot):
     # Añadir datos de prueba
     producto = Inventario(
         nombre_producto="Producto Test",
