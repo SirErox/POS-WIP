@@ -8,7 +8,7 @@ from PyQt5.QtGui import QPixmap
 from ...UI.inventario.inv_form import FormularioProducto
 from ...database.database import SessionLocal
 from ...database.models import Inventario
-from ...database.crud import actualizar_producto
+from ...database.crud import actualizar_producto, eliminar_producto
 from ...UI.inventario.inv_mov import VentanaMovimientos
 from ...UI.reportes.inv_report import VentanaReportes
 
@@ -51,8 +51,8 @@ class VentanaInventario(QWidget):
         
         # Tabla de inventario
         self.tabla_inventario = QTableWidget()
-        self.tabla_inventario.setColumnCount(8)
-        self.tabla_inventario.setHorizontalHeaderLabels(["ID", "Nombre", "Descripción", "Categoría", "Cantidad", "Foto", "Actualizar Stock", "Acciones"])
+        self.tabla_inventario.setColumnCount(9)
+        self.tabla_inventario.setHorizontalHeaderLabels(["ID", "Nombre", "Descripción", "Categoría", "Cantidad", "Foto", "Actualizar Stock", "Acciones", "Eliminar"])
         layout.addWidget(self.tabla_inventario)
         
         # Botones de acción
@@ -117,6 +117,11 @@ class VentanaInventario(QWidget):
             boton_editar = QPushButton("Editar")
             boton_editar.clicked.connect(lambda checked, producto_id=producto.id: self.editar_producto(producto_id))
             self.tabla_inventario.setCellWidget(row, 7, boton_editar)
+
+            # Botón para eliminar producto
+            boton_eliminar = QPushButton("Eliminar")
+            boton_eliminar.clicked.connect(lambda checked, producto_id=producto.id: self.eliminar_producto(producto_id))
+            self.tabla_inventario.setCellWidget(row, 8, boton_eliminar)
         
         session.close()
 
@@ -126,6 +131,18 @@ class VentanaInventario(QWidget):
             actualizar_producto(session, producto_id, cantidad_stock=cantidad)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo actualizar el stock: {e}")
+        finally:
+            session.close()
+
+    def eliminar_producto(self, producto_id):
+        session = SessionLocal()
+        try:
+            usuario_id = 1  # ID del usuario que realiza la acción, ajustar según sea necesario
+            eliminar_producto(session, usuario_id, producto_id)
+            QMessageBox.information(self, "Éxito", f"Producto con ID {producto_id} marcado como inactivo")
+            self.actualizar_tabla()  # Recargar la tabla de inventario
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"No se pudo eliminar el producto: {e}")
         finally:
             session.close()
 

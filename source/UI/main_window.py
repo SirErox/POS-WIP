@@ -5,12 +5,13 @@ from PyQt5.QtCore import Qt,QPropertyAnimation,QSize
 from .user_control import UserControlWindow
 from ..UI.inventario.inv_control import VentanaInventario
 class MainWindow(QMainWindow):
-    def __init__(self,usuario):
+    def __init__(self, usuario):
         super().__init__()
+        self.usuario = usuario
+        self.setWindowTitle(f"POS System - {self.usuario.username}")
         self.usuario_logueado = usuario.nombre_completo
         self.usuario=usuario
         #self.usuario=usuario
-        self.setWindowTitle(f"POS - Bienvenido {self.usuario.nombre_completo}")
         self.setWindowIcon(QIcon('source/icons/logo.ico'))  
         self.resize(800, 600)
 
@@ -161,4 +162,3 @@ class MainWindow(QMainWindow):
     def abrir_gestion_inventario(self):
         self.ventana_inventario = VentanaInventario()
         self.ventana_inventario.show()
-

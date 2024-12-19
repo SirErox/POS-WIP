@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from source.database.database import SessionLocal
 from .security import hashear_contra
 from datetime import datetime
+from source.Utils.auditoria import registrar_accion
+
 # Crear una sesión global para la base de datos
 db = SessionLocal()
 
@@ -106,18 +108,15 @@ def calcular_antiguedad(fecha_inicio):
 
 def agregar_producto(session: Session, nombre_producto, descripcion, categoria, tipo, unidad_medida, precio, codigo_barras, cantidad_stock, activo, foto=None):
     if foto and os.path.exists(foto):
-        # Obtener la extensión del archivo
         _, extension = os.path.splitext(foto)
-        # Renombrar la foto
-        nueva_foto_path = f"fotos/{nombre_producto}_item{extension}"
-        # Crear el directorio si no existe
+        nueva_foto_path = f"source/imagenes/productos/{nombre_producto}_item{extension}"
         os.makedirs(os.path.dirname(nueva_foto_path), exist_ok=True)
-        # Eliminar el archivo de destino si ya existe
         if os.path.exists(nueva_foto_path):
             os.remove(nueva_foto_path)
-        # Mover la foto a la nueva ubicación
         os.rename(foto, nueva_foto_path)
         foto = nueva_foto_path
+    else:
+        foto = None  # Asegúrate de que foto es None si no existe el archivo
 
     nuevo_producto = Inventario(
         nombre_producto=nombre_producto,
@@ -133,12 +132,13 @@ def agregar_producto(session: Session, nombre_producto, descripcion, categoria, 
     )
     session.add(nuevo_producto)
     session.commit()
+    registrar_movimiento(session, nuevo_producto.id, "entrada", cantidad_stock, "Inventario inicial")
     session.refresh(nuevo_producto)
     return nuevo_producto.id
 
 def listar_inventario(db, activo=None):
     query = "SELECT * FROM inventario"
-    if activo is not None:
+    if (activo is not None):
         query += " WHERE activo = %s"
         values = (int(activo),)
     else:
@@ -148,36 +148,54 @@ def listar_inventario(db, activo=None):
     cursor.execute(query, values)
     return cursor.fetchall()
 
-def actualizar_producto(session: Session, producto_id, **kwargs):
+def actualizar_producto(session: Session, producto_id, nombre_producto=None, descripcion=None, categoria=None, tipo=None, unidad_medida=None, precio=None, codigo_barras=None, cantidad_stock=None, activo=None, foto=None):
     producto = session.query(Inventario).filter(Inventario.id == producto_id).first()
-    if 'foto' in kwargs and kwargs['foto'] and os.path.exists(kwargs['foto']):
-        # Obtener la extensión del archivo
-        _, extension = os.path.splitext(kwargs['foto'])
-        # Renombrar la foto
-        nueva_foto_path = f"fotos/{kwargs['nombre_producto']}_item{extension}"
-        # Crear el directorio si no existe
+    if not producto:
+        raise ValueError("Producto no encontrado")
+
+    if nombre_producto is not None:
+        producto.nombre_producto = nombre_producto
+    if descripcion is not None:
+        producto.descripcion = descripcion
+    if categoria is not None:
+        producto.categoria = categoria
+    if tipo is not None:
+        producto.tipo = tipo
+    if unidad_medida is not None:
+        producto.unidad_medida = unidad_medida
+    if precio is not None:
+        producto.precio = precio
+    if codigo_barras is not None:
+        producto.codigo_barras = codigo_barras
+    if cantidad_stock is not None:
+        producto.cantidad_stock = cantidad_stock
+    if activo is not None:
+        producto.activo = activo
+    if foto and os.path.exists(foto):
+        _, extension = os.path.splitext(foto)
+        nueva_foto_path = f"source/imagenes/productos/{nombre_producto}_item{extension}"
         os.makedirs(os.path.dirname(nueva_foto_path), exist_ok=True)
-        # Eliminar el archivo de destino si ya existe
         if os.path.exists(nueva_foto_path):
             os.remove(nueva_foto_path)
-        # Mover la foto a la nueva ubicación
-        os.rename(kwargs['foto'], nueva_foto_path)
-        kwargs['foto'] = nueva_foto_path
+        os.rename(foto, nueva_foto_path)
+        producto.foto = nueva_foto_path
 
-    for key, value in kwargs.items():
-        setattr(producto, key, value)
     session.commit()
-    return producto
+    registrar_movimiento(session, producto.id, "actualizacion", cantidad_stock, "Inventario inicial")
+    session.refresh(producto)
+    return producto.id
 
 def buscar_producto(session: Session, producto_id):
     return session.query(Inventario).filter(Inventario.id == producto_id).first()
 
-def eliminar_producto(session: Session, producto_id):
+def eliminar_producto(session: Session, usuario_id, producto_id):
     producto = session.query(Inventario).filter(Inventario.id == producto_id).first()
     if producto:
-        producto.activo = False
+        producto.activo = False  # Marcar el producto como inactivo
         session.commit()
-    return producto
+        
+        # Registrar acción en auditoría
+        registrar_accion(usuario_id, "Eliminar Producto", f"Producto {producto.nombre_producto} marcado como inactivo.")
 
 def registrar_movimiento(session: Session, producto_id, tipo_movimiento, cantidad, descripcion=None):
     movimiento = MovimientoInventario(

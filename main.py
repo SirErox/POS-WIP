@@ -1,13 +1,14 @@
 import sys
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QDialog,QMessageBox
+from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox
 from source.UI.login_ui import LoginWindow
 from source.UI.main_window import MainWindow
 from source.database.database import init_db
-class main:
+
+class App:
     def __init__(self):
-        self.app = QApplication(sys.argv)
+        self.app = QApplication([])
         self.app.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         try:
             # Intentamos conectar a la base de datos
@@ -30,18 +31,12 @@ class main:
         """
 
     def run(self):
-        if self.login.exec_() == QDialog.Accepted:
-            usuario = self.login.usuario
-            self.mainWindow=MainWindow(usuario)
-            self.mainWindow.show()
-            sys.exit(self.app.exec_())
+        self.login.exec_()
+        self.app.exec_()
 
 if __name__ == "__main__":
-    app= main()
     try:
-        with open('source/styles/main.css', 'r') as f:
-            app.app.setStyleSheet(f.read())
+        app = App()
+        app.run()
     except FileNotFoundError:
         print("Archivo de estilo no encontrado: login.css")
-
-    app.run()

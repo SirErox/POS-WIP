@@ -1,91 +1,79 @@
 from PyQt5.QtWidgets import (QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QMessageBox,
-                             QSpacerItem,QSizePolicy,QApplication)
+                             QSpacerItem, QSizePolicy, QApplication)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon,QPixmap
+from PyQt5.QtGui import QPixmap
 from ..database.crud import listar_usuarios  # Importar la función para validar usuarios
 from ..database.security import verificar_contra
 from ..UI.main_window import MainWindow
+from source.Utils.auditoria import registrar_accion
+from source.database.database import SessionLocal
+from source.database.models import Table_usuario as Usuario
+
 class LoginWindow(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Login - POS System")
-        self.setGeometry(500,100,200, 150)
-        #quitar icono ? de la ventana
+        self.setGeometry(500, 100, 200, 150)  # Ajustar el tamaño de la ventana
+        # Quitar icono ? de la ventana
         self.setWindowFlags(
-        Qt.Window |
-        Qt.CustomizeWindowHint |
-        Qt.WindowTitleHint |
-        Qt.WindowCloseButtonHint 
+            Qt.Window |
+            Qt.CustomizeWindowHint |
+            Qt.WindowTitleHint |
+            Qt.WindowCloseButtonHint
         )
         # Cargar estilos
         try:
             with open('source/styles/login.css', 'r') as f:
                 self.setStyleSheet(f.read())
         except FileNotFoundError:
-            print("Archivo de estilo no encontrado: login.css")
+            pass
 
-        self.init_ui()
+        layout = QVBoxLayout(self)
 
-    def init_ui(self):
-        # Layout y widgets
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignCenter)
-        
+        # Añadir imagen del logo con medidas ajustadas
         # Logo
         self.logo_label = QLabel(self)
         self.logo_label.setPixmap(QPixmap("source/icons/logo.jpeg").scaled(250, 300, Qt.KeepAspectRatio))
         self.logo_label.setAlignment(Qt.AlignCenter)
-
-         # Espacio entre logo y campos de texto
         layout.addWidget(self.logo_label)
-        layout.addSpacerItem(QSpacerItem(20, 20, QSizePolicy.Minimum, QSizePolicy.Fixed))
 
-        self.label_user = QLabel("Usuario:")
-        self.input_user = QLineEdit(self)
-        self.input_user.setFocus()
-        self.input_user.setPlaceholderText("Usuario")
-        self.label_pass = QLabel("Contraseña:")
-        self.input_pass = QLineEdit(self)
-        self.input_pass.setPlaceholderText("contraseña")
-        self.input_pass.setEchoMode(QLineEdit.Password)  # Ocultar la contraseña
+        self.usuario_label = QLabel("Usuario:")
+        self.usuario_input = QLineEdit()
+        self.contrasena_label = QLabel("Contraseña:")
+        self.contrasena_input = QLineEdit()
+        self.contrasena_input.setEchoMode(QLineEdit.Password)
 
-        self.login_button = QPushButton("Iniciar Sesión")
-        self.login_button.setDefault(True)
-        self.login_button.clicked.connect(lambda: self.validate_login())
-        self.close_button = QPushButton("Salir",self)
-        self.close_button.clicked.connect(self.close_app)
+        self.boton_iniciar_sesion = QPushButton("Iniciar Sesión")
+        self.boton_iniciar_sesion.clicked.connect(self.iniciar_sesion)
 
-        layout.addWidget(self.label_user)
-        layout.addWidget(self.input_user)
-        layout.addWidget(self.label_pass)
-        layout.addWidget(self.input_pass)
-        layout.addWidget(self.login_button)
-        layout.addWidget(self.close_button)
-        # Espaciador final
-        layout.addSpacerItem(QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding))
+        layout.addWidget(self.usuario_label)
+        layout.addWidget(self.usuario_input)
+        layout.addWidget(self.contrasena_label)
+        layout.addWidget(self.contrasena_input)
+        layout.addWidget(self.boton_iniciar_sesion)
+
         self.setLayout(layout)
 
-        # Resultado de la autenticación
-        self.authenticated = False
-        self.usuario=None
-    
-    def close_app(self):
-        QApplication.quit()  # Cierra toda la aplicación
-    def validate_login(self):
-        username=self.input_user.text()
-        password=self.input_pass.text()    
-        # Validar usuario con la base de datos        
-        usuarios = listar_usuarios()
-        #print(f"usuarios encontrados:{usuarios}") flag
-        for usuario in usuarios:
-            if usuario.username == username and verificar_contra(password,usuario.password):
-                QMessageBox.information(self, "Login", f"Bienvenido {usuario.nombre_completo}")
-                self.authenticated = True
-                self.usuario=usuario
-                self.accept()  # Cierra el diálogo
-                # Abrir ventana principal
-                main_window = MainWindow(usuario)
-                main_window.show()
-                return
-        
-        QMessageBox.warning(self, "Login", "Credenciales incorrectas. Inténtalo de nuevo.")
+    def iniciar_sesion(self):
+        usuario = self.usuario_input.text()
+        contrasena = self.contrasena_input.text()
+
+        session = SessionLocal()
+        try:
+            usuario_obj = session.query(Usuario).filter(Usuario.username == usuario).first()
+            if usuario_obj and verificar_contra(contrasena, usuario_obj.password):
+                # Registrar acción de inicio de sesión
+                registrar_accion(usuario_obj.id, "Inicio de Sesión", f"El usuario {usuario} ha iniciado sesión.")
+                QMessageBox.information(self, "Éxito", "Inicio de sesión exitoso.")
+                self.usuario = usuario_obj  # Definir el atributo usuario
+                self.accept()
+                # Abrir la ventana principal pasando el usuario
+                self.main_window = MainWindow(self.usuario)
+                self.main_window.show()
+            else:
+                QMessageBox.warning(self, "Error", "Usuario o contraseña incorrectos.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al iniciar sesión: {e}")
+            raise e
+        finally:
+            session.close()

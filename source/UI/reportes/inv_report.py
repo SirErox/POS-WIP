@@ -7,10 +7,12 @@ from ...database.models import Inventario, MovimientoInventario
 from openpyxl import Workbook
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+from source.Utils.auditoria import registrar_accion
 
 class VentanaReportes(QWidget):
-    def __init__(self):
+    def __init__(self, usuario_id):
         super().__init__()
+        self.usuario_id = usuario_id
         self.setWindowTitle("Generar Reportes de Inventario")
         self.resize(400, 300)
         layout = QVBoxLayout(self)
@@ -114,6 +116,9 @@ class VentanaReportes(QWidget):
                         y -= 20
                     c.save()
                 QMessageBox.information(self, "Éxito", f"Reporte de Movimientos de Inventario generado en formato {formato_reporte}.")
+            
+            # Registrar acción en auditoría
+            registrar_accion(self.usuario_id, "Generar Reporte", f"Reporte de {tipo_reporte} generado en formato {formato_reporte}.")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo generar el reporte: {e}")
         finally:
