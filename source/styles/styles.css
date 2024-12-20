@@ -1,0 +1,59 @@
+/* Colores y tipografía base */
+QWidget {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f5f5fa; /* Un blanco con un toque de gris */
+    color: #222222; /* Negro suave para mejor contraste */
+}
+
+/* Botones */
+QPushButton {
+    background-color: #e652c9;
+    color: #ffffff;
+    border: none;
+    padding: 10px 20px; /* Tamaño consistente */
+    border-radius: 5px;
+    font-size: 14px;
+    margin: 5px; /* Añade margen externo */
+}
+
+QPushButton:hover {
+    background-color: #536f7c; /* Un tono más oscuro para el hover */
+}
+
+/* Títulos */
+QLabel {
+    color: #e652c9; /* Usar el color primario para destacar */
+    font-size: 16px; /* Aumentar ligeramente el tamaño */
+    font-weight: 500; /* Para diferenciar de otros textos */
+    margin-bottom: 5px; /* Espacio entre etiqueta y campo */
+}
+
+/* Tablas */
+QTableWidget {
+    background-color: #ffffff;
+    border: 1px solid #cccccc; /* Borde suave */
+}
+
+QHeaderView::section {
+    background-color: #536f7c; /* Secundario */
+    color: #ffffff;
+    font-weight: bold;
+    padding: 5px;
+    border-bottom: 2px solid #e652c9; /* Línea inferior primaria */
+}
+
+/* Inputs de texto */
+QLineEdit {
+    border: 1px solid #cccccc;
+    border-radius: 3px;
+    padding: 5px;
+    background-color: #ffffff;
+    color: #222222;
+    margin-bottom: 15px; /* Espacio entre campos */
+}
+
+QLineEdit:focus {
+    border: 1px solid #e652c9;
+    outline: none;
+    background-color: #f7f7fc; /* Fondo más claro */
+}

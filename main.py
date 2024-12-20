@@ -8,35 +8,43 @@ from source.database.database import init_db
 
 class App:
     def __init__(self):
-        self.app = QApplication([])
+        self.app = QApplication(sys.argv)
         self.app.setWindowIcon(QIcon('source/icons/logo.jpeg'))
+
+        # Cargar y aplicar la hoja de estilos
+        try:
+            with open('source/styles/styles.css', 'r') as f:
+                self.app.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print("Archivo de estilo no encontrado: styles.css")
+        except Exception as e:
+            print(f"Error al cargar la hoja de estilos: {e}")
+
         try:
             # Intentamos conectar a la base de datos
             init_db()
         except Exception as e:
-            # Si hay un error, mostramos un mensaje y cerramos la app
             QMessageBox.critical(None, "Error de conexión", f"No se pudo conectar a la base de datos:\n{e}")
             sys.exit(1)  # Cierra la aplicación con un código de error
 
         # Configuración de la ventana de login
         self.login = LoginWindow()
         self.login.setWindowFlags(Qt.Window |
-        Qt.CustomizeWindowHint |
-        Qt.WindowTitleHint |
-        Qt.WindowCloseButtonHint)  # Eliminar ícono
-        """
-            Qt.Window: Mantiene la funcionalidad de ventana normal.
-            Qt.WindowTitleHint: Permite mostrar el título de la ventana.
-            Qt.CustomizeWindowHint: Elimina características adicionales, como el ícono.
-        """
+                                   Qt.CustomizeWindowHint |
+                                   Qt.WindowTitleHint |
+                                   Qt.WindowCloseButtonHint)
+
+        # Variable para asegurar que solo una instancia de MainWindow exista
+        self.main_window = None
 
     def run(self):
-        self.login.exec_()
-        self.app.exec_()
+        if self.login.exec_() == QDialog.Accepted:
+            # Asegúrate de no crear múltiples ventanas
+            if not self.main_window:
+                self.main_window = MainWindow(self.login.usuario)
+                self.main_window.show()
+            sys.exit(self.app.exec_())  # Ejecuta el bucle de eventos
 
 if __name__ == "__main__":
-    try:
-        app = App()
-        app.run()
-    except FileNotFoundError:
-        print("Archivo de estilo no encontrado: login.css")
+    app = App()
+    app.run()
