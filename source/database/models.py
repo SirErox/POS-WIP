@@ -8,8 +8,8 @@ from sqlalchemy.orm import relationship
 class Table_usuario(Base):
     __tablename__ = 'usuarios'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(50), nullable=False, unique=True)
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    username = Column(String(50), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
     nombre_completo = Column(String(100), nullable=True)
     fecha_nacimiento = Column(Date, nullable=True)
@@ -24,7 +24,7 @@ class Table_usuario(Base):
     created_at = Column(TIMESTAMP, nullable=True, server_default=func.now())
     updated_at = Column(TIMESTAMP, nullable=True, server_default=func.now(), onupdate=func.now())
 
-    auditorias = relationship("Auditoria", back_populates="usuario")
+    auditorias = relationship("Auditoria", order_by="Auditoria.id", back_populates="usuario")
 
 @event.listens_for(Table_usuario, 'before_insert')
 @event.listens_for(Table_usuario, 'before_update')

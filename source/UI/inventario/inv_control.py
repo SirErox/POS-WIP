@@ -5,18 +5,19 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from ...UI.inventario.inv_form import FormularioProducto
-from ...database.database import SessionLocal
-from ...database.models import Inventario
+from source.database.database import SessionLocal
+from source.database.models import Inventario
 from ...database.crud import actualizar_producto, eliminar_producto
 from ...UI.inventario.inv_mov import VentanaMovimientos
 from ...UI.reportes.inv_report import VentanaReportes
+from ...UI.inventario.inv_form import FormularioProducto
 
 class VentanaInventario(QWidget):
-    def __init__(self):
+    def __init__(self, usuario_id):
         super().__init__()
+        self.usuario_id = usuario_id
         self.setWindowTitle("Gestión de Inventario")
-        self.resize(800, 600)
+        self.setGeometry(100, 100, 800, 600)
         layout = QVBoxLayout(self)
         
         titulo = QLabel("Gestión de Inventario")
@@ -64,6 +65,11 @@ class VentanaInventario(QWidget):
         
         self.setLayout(layout)
         self.actualizar_tabla()
+        
+    def agregar_producto(self):
+        form = FormularioProducto()
+        if form.exec_() == QDialog.Accepted:
+            self.actualizar_tabla()
 
     def obtener_categorias(self):
         session = SessionLocal()
@@ -73,56 +79,29 @@ class VentanaInventario(QWidget):
 
     def actualizar_tabla(self):
         session = SessionLocal()
-        query = session.query(Inventario)
+        query = session.query(Inventario).all()
         
-        # Filtrar por nombre
-        nombre_filtro = self.barra_busqueda.text()
-        if nombre_filtro:
-            query = query.filter(Inventario.nombre_producto.ilike(f"%{nombre_filtro}%"))
-        
-        # Filtrar por categoría
-        categoria_filtro = self.combo_categoria.currentText()
-        if categoria_filtro != "Todas las categorías":
-            query = query.filter(Inventario.categoria == categoria_filtro)
-        
-        productos = query.all()
-        self.tabla_inventario.setRowCount(len(productos))
-        
-        for row, producto in enumerate(productos):
-            self.tabla_inventario.setItem(row, 0, QTableWidgetItem(str(producto.id)))
-            self.tabla_inventario.setItem(row, 1, QTableWidgetItem(producto.nombre_producto))
-            self.tabla_inventario.setItem(row, 2, QTableWidgetItem(producto.descripcion))
-            self.tabla_inventario.setItem(row, 3, QTableWidgetItem(producto.categoria))
-            self.tabla_inventario.setItem(row, 4, QTableWidgetItem(str(producto.cantidad_stock)))
-            
-            # Mostrar foto
-            if producto.foto:
-                foto_label = QLabel()
-                foto_label.setPixmap(QPixmap(producto.foto).scaled(50, 50, Qt.KeepAspectRatio))
-                self.tabla_inventario.setCellWidget(row, 5, foto_label)
-            else:
-                self.tabla_inventario.setItem(row, 5, QTableWidgetItem("N/A"))
-            
-            # Campo para actualizar stock
-            if producto.tipo == "producto":
-                spinbox = QSpinBox()
-                spinbox.setRange(0, 100000)
-                spinbox.setValue(producto.cantidad_stock)
-                spinbox.valueChanged.connect(lambda value, producto_id=producto.id: self.actualizar_stock(producto_id, value))
-                self.tabla_inventario.setCellWidget(row, 6, spinbox)
-            else:
-                self.tabla_inventario.setItem(row, 6, QTableWidgetItem("N/A"))
-            
-            # Botón para editar producto
-            boton_editar = QPushButton("Editar")
-            boton_editar.clicked.connect(lambda checked, producto_id=producto.id: self.editar_producto(producto_id))
-            self.tabla_inventario.setCellWidget(row, 7, boton_editar)
+        self.tabla_inventario.setRowCount(0)
+        for row_data in query:
+            row_position = self.tabla_inventario.rowCount()
+            self.tabla_inventario.insertRow(row_position)
+            self.tabla_inventario.setItem(row_position, 0, QTableWidgetItem(str(row_data.id)))
+            self.tabla_inventario.setItem(row_position, 1, QTableWidgetItem(row_data.nombre_producto))
+            self.tabla_inventario.setItem(row_position, 2, QTableWidgetItem(row_data.descripcion))
+            self.tabla_inventario.setItem(row_position, 3, QTableWidgetItem(row_data.categoria))
+            self.tabla_inventario.setItem(row_position, 4, QTableWidgetItem(str(row_data.cantidad_stock)))
+            # Aquí puedes agregar más columnas según sea necesario
 
-            # Botón para eliminar producto
+            # Botón de editar
+            boton_editar = QPushButton("Editar")
+            boton_editar.clicked.connect(lambda _, id=row_data.id: self.editar_producto(id))
+            self.tabla_inventario.setCellWidget(row_position, 7, boton_editar)
+
+            # Botón de eliminar
             boton_eliminar = QPushButton("Eliminar")
-            boton_eliminar.clicked.connect(lambda checked, producto_id=producto.id: self.eliminar_producto(producto_id))
-            self.tabla_inventario.setCellWidget(row, 8, boton_eliminar)
-        
+            boton_eliminar.clicked.connect(lambda _, id=row_data.id: self.eliminar_producto(id))
+            self.tabla_inventario.setCellWidget(row_position, 8, boton_eliminar)
+
         session.close()
 
     def actualizar_stock(self, producto_id, cantidad):
@@ -135,13 +114,20 @@ class VentanaInventario(QWidget):
             session.close()
 
     def eliminar_producto(self, producto_id):
+        """Elimina un producto del inventario."""
         session = SessionLocal()
         try:
-            eliminar_producto(session, self.usuario_id, producto_id)
-            QMessageBox.information(self, "Éxito", f"Producto con ID {producto_id} marcado como inactivo")
-            self.load_items()  # Recargar la tabla de inventario
+            producto = session.query(Inventario).filter(Inventario.id == producto_id).first()
+            if producto:
+                session.delete(producto)
+                session.commit()
+                QMessageBox.information(self, "Éxito", "Producto eliminado correctamente.")
+                self.actualizar_tabla()
+            else:
+                QMessageBox.warning(self, "Error", "Producto no encontrado.")
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo eliminar el producto: {e}")
+            session.rollback()
+            QMessageBox.critical(self, "Error", f"Error al eliminar el producto: {e}")
         finally:
             session.close()
 

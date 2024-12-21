@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QApplication, QDialog, QMessageBox
 from source.UI.login_ui import LoginWindow
 from source.UI.main_window import MainWindow
 from source.database.database import init_db
+from source.UI.Appmanager import AppManager
 
 class App:
     def __init__(self):
@@ -46,5 +47,5 @@ class App:
             sys.exit(self.app.exec_())  # Ejecuta el bucle de eventos
 
 if __name__ == "__main__":
-    app = App()
-    app.run()
+    app_manager = AppManager()
+    app_manager.iniciar()
