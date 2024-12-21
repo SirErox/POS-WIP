@@ -3,7 +3,8 @@ import os
 import shutil
 from source.database.database import SessionLocal
 from source.database.crud import agregar_producto, actualizar_producto, buscar_producto
-from source.database.models import Inventario
+from source.database.models import Inventario,MovimientoInventario
+from sqlalchemy.exc import IntegrityError, DatabaseError
 
 @pytest.fixture
 def session():
@@ -46,8 +47,13 @@ def test_agregar_producto_con_foto(session, setup_fotos):
     producto = buscar_producto(session, producto_id)
     assert producto is not None
     assert producto.nombre_producto == "Producto Test"
-    assert producto.foto == 'fotos/Producto Test_item.jpg'
-    assert os.path.exists(producto.foto)
+
+    # Genera la ruta esperada para el archivo de la foto
+    ruta_esperada = os.path.normpath(os.path.join('source', 'imagenes', 'productos', 'Producto Test_item.jpg'))
+    ruta_generada = os.path.normpath(producto.foto)
+    assert ruta_generada == ruta_esperada  # Compara las rutas normalizadas
+    assert os.path.exists(ruta_generada)  # Verifica que el archivo exista en la ubicación esperada
+
 
 def test_actualizar_producto_con_foto(session, setup_fotos):
     foto_path = 'test_fotos/test_image.jpg'
@@ -89,5 +95,9 @@ def test_actualizar_producto_con_foto(session, setup_fotos):
     producto = buscar_producto(session, producto_id)
     assert producto is not None
     assert producto.nombre_producto == "Producto Actualizado"
-    assert producto.foto == 'fotos/Producto Actualizado_item.jpg'
-    assert os.path.exists(producto.foto)
+
+    # Genera la ruta esperada para la nueva foto
+    ruta_esperada = os.path.normpath(os.path.join('source', 'imagenes', 'productos', 'Producto Actualizado_item.jpg'))
+    ruta_generada = os.path.normpath(producto.foto)
+    assert ruta_generada == ruta_esperada  # Compara las rutas normalizadas
+    assert os.path.exists(ruta_generada)  # Verifica que el archivo exista en la ubicación esperada
