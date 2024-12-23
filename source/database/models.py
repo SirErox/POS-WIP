@@ -28,7 +28,7 @@ class Table_usuario(Base):
 
 @event.listens_for(Table_usuario, 'before_insert')
 @event.listens_for(Table_usuario, 'before_update')
-def calcular_datos_automaticos(mapper, connection, target):
+def calcular_datos_automaticos(target):
     """Calcula la edad y antigüedad antes de guardar en la base de datos."""
     if target.fecha_nacimiento:
         target.edad = calcular_edad(target.fecha_nacimiento)
@@ -81,3 +81,30 @@ class Auditoria(Base):
     usuario = relationship("Table_usuario", back_populates="auditorias")
 
 Table_usuario.auditorias = relationship("Auditoria", order_by=Auditoria.id, back_populates="usuario")
+
+class Ventas(Base):
+    __tablename__ = 'ventas'
+
+    id=Column(Integer, primary_key=True, autoincrement=True)
+    fecha=Column(DateTime,default=datetime.now,nullable=True)
+    total=Column(DECIMAL(10, 2), nullable=False)
+    metodo_pago=Column(Enum('efectivo', 'tarjeta', 'Mixto'), nullable=False)
+    cambio=Column(DECIMAL(10, 2), nullable=False,default=0.0)
+    usuario_id=Column(Integer, ForeignKey('usuarios.id'), nullable=False)
+    recibo_generado=Column(Enum('Digital','Impreso','Ninguno'), nullable=True,default='Ninguno')
+    estado=Column(Enum('Completada','Cancelada'), nullable=True,default='Completada')
+
+    detalles=relationship("DetalleVenta", back_populates="venta")
+
+class DetalleVenta(Base):
+    __tablename__ = 'detalle_venta'
+
+    id=Column(Integer, primary_key=True, autoincrement=True)
+    venta_id=Column(Integer, ForeignKey('ventas.id'), nullable=False)
+    producto_id=Column(Integer, ForeignKey('inventario.id'), nullable=False)
+    cantidad=Column(Integer, nullable=False)
+    precio_unitario=Column(DECIMAL(10, 2), nullable=False)
+    subtotal=Column(DECIMAL(10, 2), nullable=False)
+    descuento=Column(DECIMAL(10, 2), nullable=False,default=0.0)
+
+    venta=relationship("Ventas", back_populates="detalles")

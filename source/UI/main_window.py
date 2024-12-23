@@ -14,6 +14,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PANEL PRINCIPAL - Bienvenido " + self.usuario.username)
         self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.resize(1280, 720)
+        self.showMaximized()
 
         # Layout principal
         main_layout = QHBoxLayout()
@@ -68,6 +69,8 @@ class MainWindow(QMainWindow):
 
         # Cargar Estilos
         self.cargar_estilos()
+        # Mostrar la ventana en pantalla completa
+        self.maximumSize()
 
     def add_menu_button(self, text, icon_name, callback):
         """Crea un botón con ícono y texto para el menú."""
@@ -122,7 +125,7 @@ class MainWindow(QMainWindow):
 
     def abrir_ventas(self):
         """Abre la ventana de ventas."""
-        self.ventas_window = VentasWindow(self.usuario.id)
+        self.ventas_window = VentasWindow(self.app_manager, self.usuario)
         self.ventas_window.show()
 
     def cerrar_sesion(self):

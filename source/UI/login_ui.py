@@ -1,7 +1,6 @@
 from PyQt5.QtWidgets import (QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QMessageBox, QSpacerItem, QSizePolicy, QApplication)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap,QIcon
-from source.database.crud import listar_usuarios  # Importar la función para validar usuarios
 from source.database.security import verificar_contra
 from source.Utils.auditoria import registrar_accion
 from source.database.database import SessionLocal
