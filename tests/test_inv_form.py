@@ -1,14 +1,23 @@
 import pytest
 import os, sys
 from sqlalchemy.exc import IntegrityError, DatabaseError
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from source.database.models import Base
 # Añadir la ruta del proyecto al sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from source.database.database import SessionLocal
 from source.database.models import Inventario, MovimientoInventario
 from source.database.crud import agregar_producto, actualizar_producto, buscar_producto, eliminar_producto
 
+DATABASE_URL = os.getenv('DATABASE_URL', 'mysql+pymysql://root:root@localhost/test_db')
+
+engine = create_engine(DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 @pytest.fixture
 def setup_db():
+    Base.metadata.create_all(bind=engine)
     session = SessionLocal()
     # Limpia primero las tablas dependientes
     session.query(MovimientoInventario).delete()
@@ -20,6 +29,7 @@ def setup_db():
     session.query(Inventario).delete()
     session.commit()
     session.close()
+    Base.metadata.drop_all(bind=engine)
 
 def test_agregar_producto(setup_db):
     session = setup_db
