@@ -1,10 +1,10 @@
-import pytest
-import os
-import shutil
+import os,sys,pytest,shutil
 from source.database.database import SessionLocal
 from source.database.crud import agregar_producto, actualizar_producto, buscar_producto
 from source.database.models import Base,Inventario,MovimientoInventario
 from sqlalchemy.exc import IntegrityError, DatabaseError
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 @pytest.fixture
 def session():
