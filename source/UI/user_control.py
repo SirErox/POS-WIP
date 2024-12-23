@@ -11,6 +11,8 @@ class UserControlWindow(QWidget):
     def __init__(self,logged_user):
         super().__init__()
         self.usuario_logueado=logged_user
+        self.setWindowTitle("Control de Usuarios")
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.setup_ui()
         self.load_styles()
         self.load_users()
@@ -35,17 +37,17 @@ class UserControlWindow(QWidget):
         button_layout = QHBoxLayout()
 
         add_button = QPushButton("Agregar Usuario")
-        add_button.setIcon(QIcon("icons/add-user.png"))
+        add_button.setIcon(QIcon('source/icons/add-user.png'))
         add_button.clicked.connect(self.add_user)
         button_layout.addWidget(add_button)
 
         edit_button = QPushButton("Editar Usuario")
-        edit_button.setIcon(QIcon("icons/edit-user.png"))
+        edit_button.setIcon(QIcon('source/icons/edit-user.png'))
         edit_button.clicked.connect(self.edit_user)
         button_layout.addWidget(edit_button)
 
         delete_button = QPushButton("Eliminar Usuario")
-        delete_button.setIcon(QIcon("icons/delete-user.png"))
+        delete_button.setIcon(QIcon('source/icons/delete-user.png'))
         delete_button.clicked.connect(self.delete_user)
         button_layout.addWidget(delete_button)
 

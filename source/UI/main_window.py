@@ -1,17 +1,18 @@
 from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QWidget, QSizePolicy)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QIcon
 import qtawesome as qta
 from .user_control import UserControlWindow
 from .inventario.inv_control import VentanaInventario
 from source.Utils.auditoria import registrar_accion  # Importar la función para registrar acciones
-
+from .Ventas.ventas import VentasWindow
 class MainWindow(QMainWindow):
     def __init__(self, app_manager, usuario):
         super().__init__()
         self.app_manager = app_manager
         self.usuario = usuario
         self.setWindowTitle("PANEL PRINCIPAL - Bienvenido " + self.usuario.username)
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.resize(1280, 720)
 
         # Layout principal
@@ -28,7 +29,7 @@ class MainWindow(QMainWindow):
         self.menu_widget.setFixedWidth(self.menu_width_expanded)
         # Logo
         self.logo_label = QLabel()
-        self.logo_label.setPixmap(QPixmap("source/icons/logo.jpeg").scaled(150, 150, Qt.KeepAspectRatio))
+        self.logo_label.setPixmap(QPixmap('source/icons/logo.jpeg').scaled(150, 150, Qt.KeepAspectRatio))
         self.logo_label.setAlignment(Qt.AlignCenter)
         self.menu_layout.addWidget(self.logo_label)
 
@@ -121,8 +122,8 @@ class MainWindow(QMainWindow):
 
     def abrir_ventas(self):
         """Abre la ventana de ventas."""
-        print("Abrir Ventas")
-        # Aquí puedes abrir la ventana de ventas
+        self.ventas_window = VentasWindow(self.usuario.id)
+        self.ventas_window.show()
 
     def cerrar_sesion(self):
         """Cierra la sesión y regresa a la ventana de login."""

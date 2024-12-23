@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, QLabel
 )
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QIcon
 from ...database.database import SessionLocal
 from ...database.models import MovimientoInventario
 
@@ -9,6 +10,7 @@ class VentanaMovimientos(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Movimientos de Inventario")
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.resize(800, 600)
         layout = QVBoxLayout(self)
         

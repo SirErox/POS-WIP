@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (QVBoxLayout, QPushButton, QLabel, QLineEdit, QDialog, QMessageBox, QSpacerItem, QSizePolicy, QApplication)
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QIcon
 from source.database.crud import listar_usuarios  # Importar la función para validar usuarios
 from source.database.security import verificar_contra
 from source.Utils.auditoria import registrar_accion
@@ -12,6 +12,7 @@ class LoginWindow(QDialog):
         super().__init__()
         self.app_manager = app_manager
         self.setWindowTitle("Login - POS System")
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.setGeometry(500, 100, 300, 400)
         self.setWindowFlags(
             Qt.Window |
@@ -32,7 +33,7 @@ class LoginWindow(QDialog):
 
         # Logo
         self.logo_label = QLabel(self)
-        self.logo_label.setPixmap(QPixmap("source/icons/logo.jpeg").scaled(250, 300, Qt.KeepAspectRatio))
+        self.logo_label.setPixmap(QPixmap('source/icons/logo.jpeg').scaled(250, 300, Qt.KeepAspectRatio))
         self.logo_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.logo_label)
 

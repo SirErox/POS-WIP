@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import (
     QMessageBox
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QIcon
 from source.database.database import SessionLocal
 from source.database.models import Inventario
 from ...database.crud import actualizar_producto, eliminar_producto
@@ -17,6 +17,7 @@ class VentanaInventario(QWidget):
         super().__init__()
         self.usuario_id = usuario_id
         self.setWindowTitle("Gestión de Inventario")
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.setGeometry(100, 100, 800, 600)
         layout = QVBoxLayout(self)
         

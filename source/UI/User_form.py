@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import (
     QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QComboBox, QMessageBox, QDateEdit,
     QHBoxLayout, QSpinBox, QFileDialog, QFrame, QGridLayout)
 from PyQt5.QtCore import QDate,Qt
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QIcon
 from datetime import datetime
 import os,shutil,re
 from ..database.crud import agregar_usuario, editar_usuario
@@ -21,6 +21,7 @@ class UserFormDialog(QDialog):
         Qt.WindowCloseButtonHint 
         )
         self.setWindowTitle("Agregar Usuario" if not user_data else "Editar Usuario")
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.resize(500, 400)  # Ajustar tamaño de ventana
 
         self.init_ui()

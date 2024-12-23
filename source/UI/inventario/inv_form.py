@@ -2,7 +2,7 @@ import os
 from PyQt5.QtWidgets import (
     QDialog, QFormLayout, QLineEdit, QComboBox, QSpinBox, QPushButton, QHBoxLayout, QMessageBox, QLabel, QFileDialog
 )
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QIcon
 from PyQt5.QtCore import Qt
 from ...database.database import SessionLocal
 from ...database.crud import agregar_producto, actualizar_producto, buscar_producto
@@ -12,6 +12,7 @@ class FormularioProducto(QDialog):
         super().__init__()
         self.producto_id = producto_id
         self.setWindowTitle("Agregar Producto" if producto_id is None else "Editar Producto")
+        self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.resize(400, 400)
          #quitar icono ? de la ventana
         self.setWindowFlags(
