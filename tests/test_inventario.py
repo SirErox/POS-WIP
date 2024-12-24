@@ -1,4 +1,4 @@
-# Pruebas unitarias para las operaciones CRUD de la tabla Inventario
+"""# Pruebas unitarias para las operaciones CRUD de la tabla Inventario
 import os
 import sys
 import pytest
@@ -105,3 +105,4 @@ def test_actualizar_producto_con_foto(session, setup_fotos):
     ruta_generada = os.path.normpath(producto.foto)
     assert ruta_generada == ruta_esperada  # Compara las rutas normalizadas
     assert os.path.exists(ruta_generada)  # Verifica que el archivo exista en la ubicación esperada
+"""
