@@ -19,11 +19,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       
-          - name: Create MySQL container
-          run: |
-            docker run -d --name my_mysql_container -e MYSQL_ROOT_PASSWORD=root \
-                  -e MYSQL_DATABASE=test_db -e MYSQL_PASSWORD=root \
-                  -p 3306:3306 mysql:8.0
+      - name: Create MySQL container
+        run: |
+          docker run -d --name my_mysql_container -e MYSQL_ROOT_PASSWORD=root \
+                -e MYSQL_DATABASE=test_db -e MYSQL_PASSWORD=root \
+                -p 3306:3306 mysql:8.0
   
       - name: Wait for MySQL to be ready
         run: |
