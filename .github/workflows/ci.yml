@@ -10,10 +10,10 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: rootpassword
           MYSQL_DATABASE: test_db
-          MYSQL_PASSWORD: root
-          MYSQL_USER: user1
+          MYSQL_PASSWORD: password
+          MYSQL_USER: user
         ports:
           - 3306:3306
         options: >-
@@ -23,12 +23,6 @@ jobs:
           --health-retries=3
 
     steps:
-    - name: Show Docker containers
-      run: docker ps -a
-    - name: Show databases for root user
-      run: mysql --protocol=tcp -h localhost -P 3306 -u root -proot_password -e "SHOW DATABASES"
-    - name: Show databases for user1
-      run: mysql --protocol=tcp -h localhost -P 3306 -u user1 -puser1_password -e "SHOW DATABASES"
     - name: Check out the repository
       uses: actions/checkout@v2
 
@@ -36,10 +30,6 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Start MySQL service
-      run: |
-        sudo /etc/init.d/mysql start
-        mysql -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;" -u$MYSQL_USER -p$MYSQL_PASSWORD
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
@@ -47,7 +37,11 @@ jobs:
 
     - name: Set PYTHONPATH
       run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
-
+    
+    - name: Set up MySQL
+      run: |
+        sudo /etc/init.d/mysql start
+        mysql -e 'CREATE DATABASE ${{ env.MYSQL_DATABASE }};' -u${{ env.MYSQL_USER }} -p${{ env.MYSQL_PASSWORD }}
     - name: Run tests
       env:
         DATABASE_URL: mysql+pymysql://root:root@127.0.0.1/test_db
