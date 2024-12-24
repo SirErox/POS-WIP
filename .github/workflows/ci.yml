@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 jobs:
-  test:
+  Checando-pruebas:
     runs-on: ubuntu-latest
 
     services:
@@ -13,7 +13,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test_db
           MYSQL_PASSWORD: root
-          MYSQL_USER: root
+          MYSQL_USER: user1
         ports:
           - 3306:3306
         options: >-
@@ -23,6 +23,12 @@ jobs:
           --health-retries=3
 
     steps:
+    - name: Show Docker containers
+      run: docker ps -a
+    - name: Show databases for root user
+      run: mysql --protocol=tcp -h localhost -P 3306 -u root -proot_password -e "SHOW DATABASES"
+    - name: Show databases for user1
+      run: mysql --protocol=tcp -h localhost -P 3306 -u user1 -puser1_password -e "SHOW DATABASES"
     - name: Check out the repository
       uses: actions/checkout@v2
 
