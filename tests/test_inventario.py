@@ -1,3 +1,4 @@
+# Pruebas unitarias para las operaciones CRUD de la tabla Inventario
 import os
 import sys
 import pytest
