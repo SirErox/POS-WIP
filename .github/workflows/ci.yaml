@@ -12,7 +12,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4 # Use the latest version
         with:
-          python-version: 3.9
+          python-version: 3.13
 
       - name: Install dependencies
         run: |
@@ -22,12 +22,12 @@ jobs:
       - name: Create MySQL container
         run: |
           docker run -d --name my_mysql_container -e MYSQL_ROOT_PASSWORD=root \
-                -e MYSQL_DATABASE=test_db -e MYSQL_PASSWORD=root \
+                -e MYSQL_DATABASE=test_db -e MYSQL_USER=root \
                 -p 3306:3306 mysql:8.0
   
       - name: Wait for MySQL to be ready
         run: |
-          timeout 60 bash -c 'until mysqladmin ping -h 127.0.0.1 --silent; do sleep 1; done'
+          timeout 60 bash -c 'until mysqladmin ping -h 127.0.0.1 -uroot -proot --silent; do sleep 1; done'
           mysql -h 127.0.0.1 -u root -proot -e 'CREATE DATABASE IF NOT EXISTS test_db;'
 
       - name: Set PYTHONPATH
@@ -37,3 +37,9 @@ jobs:
         env:
           DATABASE_URL: mysql+pymysql://root:root@127.0.0.1/test_db
         run: pytest
+
+      - name: Clean up MySQL container
+        run: |
+          docker stop my_mysql_container
+          docker rm my_mysql_container
+  
