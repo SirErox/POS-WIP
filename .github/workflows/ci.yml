@@ -8,10 +8,11 @@ jobs:
 
     services:
       mysql:
-        image: mysql:8.0  # Actualizar a la versión 8.0 de MySQL
+        image: mysql:8.0
         env:
           MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: test_db
+          MYSQL_USER: root
           MYSQL_PASSWORD: root
         ports:
           - 3306:3306
@@ -20,6 +21,7 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
+          --innodb_lock_wait_timeout=120
 
     steps:
     - name: Check out the repository
@@ -28,7 +30,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9  # Actualizar a la versión 3.9 de Python
+        python-version: 3.9
 
     - name: Install dependencies
       run: |
@@ -40,7 +42,6 @@ jobs:
 
     - name: Run tests
       env:
-        DATABASE_URL: mysql+pymysql://root:root@localhost/test_db
-        PYTHONPATH: .
+        DATABASE_URL: mysql+pymysql://root:root@127.0.0.1/test_db
       run: |
         pytest

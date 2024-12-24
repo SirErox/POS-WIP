@@ -1,16 +1,19 @@
+# Pruebas unitarias para las funciones de CRUD de productos
+import os
+import sys 
 import pytest
-import os, sys
+import shutil
 from sqlalchemy.exc import IntegrityError, DatabaseError
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from source.database.models import Base, Inventario, MovimientoInventario
-# Añadir la ruta del proyecto al sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from source.database.database import SessionLocal
-from source.database.models import Inventario, MovimientoInventario
 from source.database.crud import agregar_producto, actualizar_producto, buscar_producto, eliminar_producto
 
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///./test_db.sqlite')
+# Añadir la ruta del proyecto al sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+DATABASE_URL = os.getenv('DATABASE_URL', 'mysql+pymysql://root:root@127.0.0.1/test_db')
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -30,6 +33,18 @@ def setup_db():
     session.commit()
     session.close()
     Base.metadata.drop_all(bind=engine)
+
+@pytest.fixture
+def session():
+    session = SessionLocal()
+    # Limpia los datos antes de cada prueba
+    session.query(Inventario).delete()
+    session.commit()
+    yield session
+    # Limpia los datos después de cada prueba
+    session.query(Inventario).delete()
+    session.commit()
+    session.close()
 
 def test_agregar_producto(setup_db):
     session = setup_db
