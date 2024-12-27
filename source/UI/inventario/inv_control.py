@@ -63,13 +63,7 @@ class VentanaInventario(QWidget):
         botones_layout = QHBoxLayout()
         self.boton_agregar = QPushButton("Agregar Producto")
         self.boton_agregar.clicked.connect(self.agregar_producto)
-        self.boton_editar = QPushButton("Editar Producto")
-        self.boton_editar.clicked.connect(self.editar_producto)
-        self.boton_eliminar = QPushButton("Eliminar Producto")
-        self.boton_eliminar.clicked.connect(self.eliminar_producto)
         botones_layout.addWidget(self.boton_agregar)
-        botones_layout.addWidget(self.boton_editar)
-        botones_layout.addWidget(self.boton_eliminar)
         layout.addLayout(botones_layout)
 
 

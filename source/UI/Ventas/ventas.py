@@ -152,7 +152,7 @@ class VentasWindow(QMainWindow):
         try:
             productos_db = session.query(Inventario).all()
             self.productos = [
-                {"nombre": producto.nombre_producto, "imagen": producto.imagen, "precio": producto.precio}
+                {"nombre": producto.nombre_producto, "imagen": producto.foto, "precio": producto.precio}
                 for producto in productos_db
             ]   
         except Exception as e:

@@ -2,7 +2,7 @@ from sqlalchemy import (Column, ForeignKey, Integer, String, Date, TIMESTAMP, fu
                         Boolean, DateTime, Enum, DECIMAL, Text)
 from datetime import datetime
 from source.database.database import Base
-from source.Utils.helpers import calcular_edad, calcular_antiguedad 
+from source.Utils.helpers import calcular_edad, calcular_antiguedad,generar_codigo_barras
 from sqlalchemy.orm import relationship
 
 class Usuarios(Base):
@@ -52,10 +52,16 @@ class Inventario(Base):
     fecha_creacion = Column(DateTime, server_default=func.now())
     fecha_actualizacion = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    def __repr__(self):
-        return f"<Inventario(nombre_producto={self.nombre_producto}, categoria={self.categoria})>"
     proveedores = relationship("ProductoProveedor", back_populates="producto")
 
+    def __repr__(self):
+        return f"<Inventario(nombre_producto={self.nombre_producto}, categoria={self.categoria})>"
+    
+@event.listens_for(Inventario, 'before_insert')
+def generar_codigo_barras_automatico(mapper, connection, target):
+    """Genera un código de barras automáticamente si no se proporciona."""
+    if not target.codigo_barras:  # Solo genera el código si está vacío
+        target.codigo_barras = generar_codigo_barras()
 
 class MovimientoInventario(Base):
     __tablename__ = 'movimientos_inventario'

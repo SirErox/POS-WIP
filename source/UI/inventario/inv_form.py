@@ -6,12 +6,13 @@ from PyQt5.QtGui import QPixmap,QIcon
 from PyQt5.QtCore import Qt
 from ...database.database import SessionLocal
 from ...database.crud import agregar_producto, actualizar_producto, buscar_producto
+from ...Utils.helpers import generar_codigo_barras
 
 class FormularioProducto(QDialog):
-    def __init__(self, producto_id=None):
-        super().__init__()
+    def __init__(self, producto_id=None,parent=None):
+        super().__init__(parent)
         self.producto_id = producto_id
-        self.setWindowTitle("Agregar Producto" if producto_id is None else "Editar Producto")
+        self.setWindowTitle("Agregar Producto" if self.producto_id is None else "Editar Producto")
         self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
         self.resize(400, 400)
          #quitar icono ? de la ventana
@@ -21,7 +22,6 @@ class FormularioProducto(QDialog):
         Qt.WindowTitleHint |
         Qt.WindowCloseButtonHint 
         )
-        
         layout = QFormLayout(self)
         
         # Campos del formulario
@@ -70,9 +70,11 @@ class FormularioProducto(QDialog):
         self.boton_cancelar.clicked.connect(self.reject)
         
         # Si es modo editar, carga los datos existentes
-        if producto_id is not None:
+        if self.producto_id is not None:
             self.cargar_datos()
-
+        else:
+            self.codigo_barras.setText(generar_codigo_barras())
+    
     def cargar_datos(self):
         session = SessionLocal()
         try:
@@ -83,7 +85,7 @@ class FormularioProducto(QDialog):
             self.tipo.setCurrentText(producto.tipo)
             self.unidad.setText(producto.unidad_medida)
             self.precio.setText(str(producto.precio))
-            self.codigo_barras.setText(producto.codigo_barras)
+            self.codigo_barras.setText(producto.codigo_barras or generar_codigo_barras())
             self.cantidad.setValue(producto.cantidad_stock)
             self.activo.setCurrentText("Sí" if producto.activo else "No")
             if producto.foto:
@@ -105,6 +107,11 @@ class FormularioProducto(QDialog):
         session = SessionLocal()
         try:
             nombre_producto = self.nombre.text()
+            if not nombre_producto:
+                QMessageBox.critical(self, "Advertencia", "El nombre del producto es obligatorio.")
+                return
+            if not self.codigo_barras.text():
+                QMessageBox.critical(self, "Advertencia", "El código de barras no puede estar vacio.")
             if self.foto_path and os.path.exists(self.foto_path):
                 # Obtener la extensión del archivo
                 _, extension = os.path.splitext(self.foto_path)
