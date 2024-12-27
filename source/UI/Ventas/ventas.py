@@ -100,56 +100,48 @@ class VentasWindow(QMainWindow):
 
     def finalizar_venta(self):  
         if self.cartTable.rowCount() == 0:
-            QMessageBox.warning(self, "Error", "El carrito está vacío.")
+            QMessageBox.warning(self, "Carrito vacío", "No hay productos en el carrito.")
             return
 
-        metodo_pago = "efectivo"  # Por ahora, puedes agregar más métodos de pago en un combo box si lo deseas.
-        recibo_generado = "digital"  # Puedes cambiar esto según tus necesidades.
-
-        # Recolectar los datos del carrito
-        carrito = []
+        # Paso 1: Recopilar información del carrito
+        items_carrito = []
         for row in range(self.cartTable.rowCount()):
-            producto_nombre = self.cartTable.item(row, 0).text()
+            producto = self.cartTable.item(row, 0).text()
             cantidad = int(self.cartTable.item(row, 1).text())
-            precio_unitario = float(self.cartTable.item(row, 2).text().strip("$").replace(",", ""))
-            carrito.append({"nombre_producto": producto_nombre, "cantidad": cantidad, "precio_unitario": precio_unitario})
+            precio = float(self.cartTable.item(row, 2).text().strip("$").replace(",", ""))
+            items_carrito.append({"nombre": producto, "cantidad": cantidad, "precio": precio})
 
-        # Calcular el total
-        total = sum(item["cantidad"] * item["precio_unitario"] for item in carrito)
+        # Paso 2: Validar el stock de los productos
+        for item in items_carrito:
+            producto = self.app_manager.crud.obtener_producto_por_nombre(item["nombre"])
+            if producto is None:
+                QMessageBox.critical(self, "Error", f"El producto '{item['nombre']}' no existe en la base de datos.")
+                return
 
-        # Confirmar la venta con el usuario
-        confirmacion = QMessageBox.question(
-            self, "Confirmar Venta", f"El total de la venta es ${total:.2f}. ¿Desea continuar?",
-            QMessageBox.Yes | QMessageBox.No
-        )
-        if confirmacion != QMessageBox.Yes:
+            if producto.stock < item["cantidad"]:
+                QMessageBox.warning(
+                    self, 
+                    "Stock insuficiente", 
+                    f"El producto '{item['nombre']}' solo tiene {producto.stock} unidades disponibles."
+                )
+                return
+
+        # Paso 3: Solicitar el método de pago
+        metodos_pago = ["Efectivo", "Tarjeta", "Transferencia", "Otro"]
+        metodo_pago, ok = QInputDialog.getItem(self, "Método de pago", "Seleccione un método de pago:", metodos_pago, editable=False)
+        if not ok:
             return
 
-        # Llamar al método de registrar venta en el backend
+        # Paso 4: Registrar la venta
         try:
-            from source.database.database import SessionLocal
-            from source.database.crud import registrar_venta
-
-            session = SessionLocal()
-            venta_id = registrar_venta(
-                session=session,
-                usuario_id=self.usuario.id,  # Asume que tienes el ID del usuario autenticado
-                carrito=carrito,
+            self.app_manager.crud.registrar_venta(
+                usuario_id=self.usuario.id,  # ID del usuario logueado
                 metodo_pago=metodo_pago,
-                cambio=0,  # En efectivo, puedes calcular el cambio si agregas un campo de pago
-                recibo_generado=recibo_generado,
+                items=items_carrito
             )
-            session.commit()
-            QMessageBox.information(self, "Éxito", f"Venta registrada con ID: {venta_id}")
-
-            # Limpiar el carrito después de registrar la venta
-            self.cartTable.setRowCount(0)
-            self.actualizar_total()
-
+            QMessageBox.information(self, "Venta registrada", "La venta se registró exitosamente.")
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"No se pudo registrar la venta: {str(e)}")
-        finally:
-            session.close()
+            QMessageBox.critical(self, "Error", f"Ocurrió un error: {str(e)}")
 
     def mostrar_productos(self):
         # Obtener productos desde la base de datos

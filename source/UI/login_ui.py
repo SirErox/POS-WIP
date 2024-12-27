@@ -4,7 +4,7 @@ from PyQt5.QtGui import QPixmap,QIcon
 from source.database.security import verificar_contra
 from source.Utils.auditoria import registrar_accion
 from source.database.database import SessionLocal
-from source.database.models import Table_usuario as Usuario
+from source.database.models import Usuarios as Usuario
 
 class LoginWindow(QDialog):
     def __init__(self, app_manager):

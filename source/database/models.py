@@ -5,7 +5,7 @@ from source.database.database import Base
 from source.Utils.helpers import calcular_edad, calcular_antiguedad 
 from sqlalchemy.orm import relationship
 
-class Table_usuario(Base):
+class Usuarios(Base):
     __tablename__ = 'usuarios'
 
     id = Column(Integer, primary_key=True, autoincrement=True, index=True)
@@ -26,8 +26,8 @@ class Table_usuario(Base):
 
     auditorias = relationship("Auditoria", order_by="Auditoria.id", back_populates="usuario")
 
-@event.listens_for(Table_usuario, 'before_insert')
-@event.listens_for(Table_usuario, 'before_update')
+@event.listens_for(Usuarios, 'before_insert')
+@event.listens_for(Usuarios, 'before_update')
 def calcular_datos_automaticos(target):
     """Calcula la edad y antigüedad antes de guardar en la base de datos."""
     if target.fecha_nacimiento:
@@ -54,6 +54,8 @@ class Inventario(Base):
 
     def __repr__(self):
         return f"<Inventario(nombre_producto={self.nombre_producto}, categoria={self.categoria})>"
+    proveedores = relationship("ProductoProveedor", back_populates="producto")
+
 
 class MovimientoInventario(Base):
     __tablename__ = 'movimientos_inventario'
@@ -78,9 +80,9 @@ class Auditoria(Base):
     descripcion = Column(String(255), nullable=True)
     fecha = Column(DateTime, default=datetime.now)
 
-    usuario = relationship("Table_usuario", back_populates="auditorias")
+    usuario = relationship("Usuarios", back_populates="auditorias")
 
-Table_usuario.auditorias = relationship("Auditoria", order_by=Auditoria.id, back_populates="usuario")
+Usuarios.auditorias = relationship("Auditoria", order_by=Auditoria.id, back_populates="usuario")
 
 class Ventas(Base):
     __tablename__ = 'ventas'
@@ -108,3 +110,32 @@ class DetalleVenta(Base):
     descuento=Column(DECIMAL(10, 2), nullable=False,default=0.0)
 
     venta=relationship("Ventas", back_populates="detalles")
+
+"""Proovedores"""
+
+class Proveedor(Base):
+    __tablename__ = 'proveedores'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    nombre = Column(String(100), nullable=False)
+    rfc = Column(String(30), nullable=True)  # RFC ampliado
+    tipo_proveedor = Column(Enum('local', 'nacional', 'internacional'), default='local')
+    contacto = Column(String(100), nullable=True)
+    telefono = Column(String(15), nullable=True)
+    correo = Column(String(100), nullable=True)
+    direccion = Column(Text, nullable=True)
+    notas = Column(Text, nullable=True)
+    activo = Column(Boolean, default=True)
+
+    productos = relationship("ProductoProveedor", back_populates="proveedor")
+
+class ProductoProveedor(Base):
+    __tablename__ = 'producto_proveedor'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    producto_id = Column(Integer, ForeignKey('inventario.id', ondelete='CASCADE'), nullable=False)
+    proveedor_id = Column(Integer, ForeignKey('proveedores.id', ondelete='CASCADE'), nullable=False)
+    precio_compra = Column(DECIMAL(10, 2), nullable=False)
+    tiempo_entrega = Column(String(50), nullable=True)
+    cantidad_minima = Column(Integer, default=0)
+
+    producto = relationship("Inventario", back_populates="proveedores")
+    proveedor = relationship("Proveedor", back_populates="productos")

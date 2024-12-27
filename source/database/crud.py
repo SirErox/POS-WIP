@@ -1,5 +1,5 @@
 import os
-from .models import Table_usuario,Inventario,MovimientoInventario,Ventas,DetalleVenta
+from .models import ProductoProveedor, Proveedor, Usuarios,Inventario,MovimientoInventario,Ventas,DetalleVenta
 from sqlalchemy.orm import Session
 from source.database.database import SessionLocal
 from .security import hashear_contra
@@ -18,7 +18,7 @@ def calcular_edad(fecha_nacimiento):
 def agregar_usuario(nombre_completo, username, password, rol,curp, foto=None, fecha_nacimiento=None, fecha_inicio=None, ultimo_editor=None):
     with SessionLocal() as sesion:
         try:
-            nuevo_usuario = Table_usuario(
+            nuevo_usuario = Usuarios(
                 nombre_completo=nombre_completo,
                 username=username,
                 password=hashear_contra(password),
@@ -41,7 +41,7 @@ def agregar_usuario(nombre_completo, username, password, rol,curp, foto=None, fe
 # Para listar usuarios de la tabla usuarios
 def listar_usuarios():
     with SessionLocal() as sesion:
-        return sesion.query(Table_usuario).all()
+        return sesion.query(Usuarios).all()
 
 # Para registrar actividades en la tabla de logs
 def registrar_actividad(usuario_id, accion):
@@ -66,7 +66,7 @@ def editar_usuario(user_data):
     """Editar un usuario en la base de datos."""
     session = SessionLocal()
     try:
-        usuario = session.query(Table_usuario).filter_by(id=user_data["id"]).first()
+        usuario = session.query(Usuarios).filter_by(id=user_data["id"]).first()
         if not usuario:
             raise Exception("Usuario no encontrado.")
 
@@ -86,7 +86,7 @@ def eliminar_usuario(user_id):
     """Eliminar un usuario en la base de datos."""
     session = SessionLocal()
     try:
-        usuario = session.query(Table_usuario).filter_by(id=user_id).first()
+        usuario = session.query(Usuarios).filter_by(id=user_id).first()
         if not usuario:
             raise Exception("Usuario no encontrado.")
 
@@ -228,6 +228,18 @@ def registrar_venta(session: Session, usuario_id, productos, metodo_pago, cambio
     :return: ID de la venta registrada.
     """
     try:
+        # Validar el stock de todos los productos antes de registrar la venta
+        for producto in productos:
+            item_inventario = session.query(Inventario).filter_by(id=producto['id']).first()
+            if not item_inventario:
+                raise ValueError(f"Producto con ID {producto['id']} no encontrado")
+            
+            if item_inventario.tipo == 'producto' and item_inventario.cantidad_stock < producto['cantidad']:
+                raise ValueError(
+                    f"Stock insuficiente para el producto '{item_inventario.nombre_producto}'. "
+                    f"Disponible: {item_inventario.cantidad_stock}, Requerido: {producto['cantidad']}"
+                )
+
         # Calcular el total de la venta
         total = sum(p['cantidad'] * p['precio_unitario'] for p in productos)
 
@@ -241,11 +253,10 @@ def registrar_venta(session: Session, usuario_id, productos, metodo_pago, cambio
             recibo_generado=recibo_generado
         )
         session.add(nueva_venta)
-        session.commit()
+        session.commit()  # Confirmar la venta antes de registrar detalles
 
-        # Registrar los detalles de la venta
+        # Registrar los detalles de la venta y actualizar stock
         for producto in productos:
-            # Crear un detalle de venta
             detalle = DetalleVenta(
                 venta_id=nueva_venta.id,
                 producto_id=producto['id'],
@@ -254,20 +265,127 @@ def registrar_venta(session: Session, usuario_id, productos, metodo_pago, cambio
             )
             session.add(detalle)
 
-            # Actualizar el stock del producto
+            # Reducir el stock del producto
             item_inventario = session.query(Inventario).filter_by(id=producto['id']).first()
-            if not item_inventario:
-                raise ValueError(f"Producto con ID {producto['id']} no encontrado")
-            
             if item_inventario.tipo == 'producto':  # Solo reducir stock si es un producto
-                if item_inventario.cantidad_stock < producto['cantidad']:
-                    raise ValueError(f"Stock insuficiente para el producto {item_inventario.nombre_producto}")
                 item_inventario.cantidad_stock -= producto['cantidad']
 
         # Confirmar todos los cambios
         session.commit()
-
         return nueva_venta.id
+    except Exception as e:
+        session.rollback()
+        raise e
+    
+"""Proovedores CRUD"""
+
+def agregar_proveedor(session, nombre, rfc=None, tipo_proveedor='local', contacto=None, telefono=None, correo=None, direccion=None, notas=None, activo=True):
+    nuevo_proveedor = Proveedor(
+        nombre=nombre,
+        rfc=rfc,
+        tipo_proveedor=tipo_proveedor,
+        contacto=contacto,
+        telefono=telefono,
+        correo=correo,
+        direccion=direccion,
+        notas=notas,
+        activo=activo
+    )
+    session.add(nuevo_proveedor)
+    session.commit()
+    return nuevo_proveedor.id
+
+def editar_proveedor(session, proveedor_id, rfc=None, **kwargs):
+    proveedor = session.query(Proveedor).filter_by(id=proveedor_id).first()
+    if not proveedor:
+        raise ValueError("Proveedor no encontrado")
+
+    # Actualiza los campos necesarios
+    if rfc is not None:
+        proveedor.rfc = rfc
+    for key, value in kwargs.items():
+        if hasattr(proveedor, key):
+            setattr(proveedor, key, value)
+
+    session.commit()
+
+def listar_proveedores(session, activo=True):
+    proveedores = session.query(Proveedor).filter_by(activo=activo).all()
+    return [
+        {
+            "id": p.id,
+            "nombre": p.nombre,
+            "rfc": p.rfc or "N/A",
+            "tipo_proveedor": p.tipo_proveedor,
+            "contacto": p.contacto,
+            "telefono": p.telefono,
+            "correo": p.correo,
+            "direccion": p.direccion,
+            "notas": p.notas,
+            "activo": p.activo
+        }
+        for p in proveedores
+    ]
+
+def agregar_relacion_producto_proveedor(session, producto_id, proveedor_id, precio_compra, tiempo_entrega=None, cantidad_minima=0):
+    relacion = ProductoProveedor(
+        producto_id=producto_id,
+        proveedor_id=proveedor_id,
+        precio_compra=precio_compra,
+        tiempo_entrega=tiempo_entrega,
+        cantidad_minima=cantidad_minima
+    )
+    session.add(relacion)
+    session.commit()
+    return relacion.id
+
+def listar_proveedores_por_producto(session, producto_id):
+    relaciones = session.query(ProductoProveedor).filter_by(producto_id=producto_id).all()
+    return [
+        {
+            "proveedor_id": r.proveedor_id,
+            "nombre_proveedor": r.proveedor.nombre,
+            "precio_compra": r.precio_compra,
+            "tiempo_entrega": r.tiempo_entrega,
+            "cantidad_minima": r.cantidad_minima
+        }
+        for r in relaciones
+    ]
+
+def editar_relacion_producto_proveedor(session, relacion_id, **kwargs):
+    relacion = session.query(ProductoProveedor).filter_by(id=relacion_id).first()
+    if not relacion:
+        raise ValueError("Relación no encontrada")
+
+    for key, value in kwargs.items():
+        if hasattr(relacion, key):
+            setattr(relacion, key, value)
+    session.commit()
+
+def agregar_proveedor_producto(session, producto_id, proveedor_id, precio_compra, tiempo_entrega=None, cantidad_minima=0):
+    """
+    Crea una relación entre un producto y un proveedor.
+
+    :param session: Sesión de SQLAlchemy.
+    :param producto_id: ID del producto.
+    :param proveedor_id: ID del proveedor.
+    :param precio_compra: Precio de compra del producto al proveedor.
+    :param tiempo_entrega: Tiempo de entrega estimado (opcional).
+    :param cantidad_minima: Cantidad mínima de pedido (opcional).
+    :return: ID de la relación creada.
+    """
+    try:
+        nueva_relacion = ProductoProveedor(
+            producto_id=producto_id,
+            proveedor_id=proveedor_id,
+            precio_compra=precio_compra,
+            tiempo_entrega=tiempo_entrega,
+            cantidad_minima=cantidad_minima
+        )
+        session.add(nueva_relacion)
+        session.commit()
+        session.refresh(nueva_relacion)
+        return nueva_relacion.id
     except Exception as e:
         session.rollback()
         raise e
