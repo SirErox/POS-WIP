@@ -1,19 +1,28 @@
-from PyQt5.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
-                             QTableWidget, QHeaderView, QScrollArea, QWidget, QFrame, QMessageBox,
-                             QInputDialog, QTableWidgetItem
-                             )
-from PyQt5.QtGui import QPixmap,QIcon
-from PyQt5.QtCore import Qt
+# Importaciones de PyQt5
+from PyQt5.QtWidgets import (
+    QMainWindow, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton,
+    QTableWidget, QHeaderView, QScrollArea, QWidget, QFrame, QMessageBox,
+    QInputDialog, QTableWidgetItem, QListWidget
+)
+from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtCore import Qt, QPoint
+
+# Iconos con qtawesome
 from qtawesome import icon
+
+# Base de datos
+from source.database.database import SessionLocal
+from source.database.models import Inventario
 
 class VentasWindow(QMainWindow):
     def __init__(self, app_manager, usuario):
         super().__init__()
         self.app_manager = app_manager
         self.usuario = usuario
+        #Configuración inicial de la ventana
         self.setWindowTitle("Ventas - POS System")
         self.setWindowIcon(QIcon('source/icons/logo.jpeg'))
-        self.resize(1280, 720)
+        self.resize(720, 576)
 
        # Layout principal
         self.centralWidget = QWidget()
@@ -27,7 +36,15 @@ class VentasWindow(QMainWindow):
         self.searchBar = QLineEdit()
         self.searchBar.setPlaceholderText("Buscar productos...")
         self.searchBar.textChanged.connect(self.filtrar_productos)
+        self.searchBar.returnPressed.connect(self.agregar_por_defecto)
         self.leftSection.addWidget(self.searchBar)
+
+        # Lista de sugerencias
+        self.dropdownList = QListWidget(self)
+        self.dropdownList.setWindowFlags(Qt.Popup)  # Ventana emergente
+        self.dropdownList.hide()  # Ocultarla inicialmente
+        self.dropdownList.activated.connect(self.seleccionar_producto)  # Conectar selección
+        self.mainLayout.addWidget(self.dropdownList)
 
         # Tabla de carrito
         self.cartTable = QTableWidget()
@@ -97,6 +114,12 @@ class VentasWindow(QMainWindow):
         ]
 
         self.mostrar_productos()
+
+    def seleccionar_sugerencia(self, item):
+        texto = item.text().split(" - ")[0]  # Obtener solo el nombre del producto
+        self.searchBar.setText(texto)
+        self.suggestionList.setVisible(False)  # Ocultar la lista después de seleccionar
+
 
     def finalizar_venta(self):  
         if self.cartTable.rowCount() == 0:
@@ -170,24 +193,27 @@ class VentasWindow(QMainWindow):
         # Mostrar productos cargados
         for producto in self.productos:
             frame = QWidget()
-            frame.setFixedSize(120, 150)
+            frame.setFixedSize(100, 140)
             frameLayout = QVBoxLayout(frame)
-            frameLayout.setContentsMargins(5, 5, 5, 5)
+            frameLayout.setContentsMargins(2, 2, 2, 2)
 
             # Imagen del producto
             imagen = QLabel()
-            pixmap = QPixmap(producto["imagen"]).scaled(100, 100, Qt.KeepAspectRatio)
+            pixmap = QPixmap(producto["imagen"]).scaled(90, 90, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             imagen.setPixmap(pixmap)
             frameLayout.addWidget(imagen)
 
             # Nombre del producto
             nombre = QLabel(producto["nombre"])
             nombre.setAlignment(Qt.AlignCenter)
+            nombre.setStyleSheet("font-size: 10pt;")
+            nombre.setWordWrap(True)
+            nombre.setFixedHeight(35)
             frameLayout.addWidget(nombre)
 
             # Botón para agregar al carrito
             botonAgregar = QPushButton("+")
-            botonAgregar.setFixedSize(30, 30)
+            botonAgregar.setFixedSize(25, 25)
             botonAgregar.clicked.connect(lambda _, p=producto: self.preguntar_cantidad(p))
             frameLayout.addWidget(botonAgregar, alignment=Qt.AlignRight | Qt.AlignBottom)
 
@@ -195,11 +221,85 @@ class VentasWindow(QMainWindow):
 
     def filtrar_productos(self):
         texto_busqueda = self.searchBar.text().lower()
-        self.productos = [
+
+        # Limpiar la lista desplegable
+        self.dropdownList.clear()
+
+        # Filtrar productos que coincidan con el texto de búsqueda
+        productos_filtrados = [
             producto for producto in self.productos
             if texto_busqueda in producto["nombre"].lower()
         ]
-        self.mostrar_productos()
+
+        # Limpiar la lista desplegable
+        self.dropdownList.clear()
+
+        if productos_filtrados:
+            # Agregar productos filtrados a la lista desplegable
+            for producto in productos_filtrados:
+                self.dropdownList.addItem(f"{producto['nombre']} - ${producto['precio']:.2f}")
+        
+            # Mostrar y posicionar la lista debajo de la barra de búsqueda
+            self.posicionar_lista()
+            self.dropdownList.show()
+        else:
+            # Ocultar la lista si no hay resultados
+            self.dropdownList.hide()
+
+    def posicionar_lista(self):
+        """Posicionar la lista desplegable debajo de la barra de búsqueda."""
+        pos = self.searchBar.mapToGlobal(QPoint(0, self.searchBar.height()))
+        self.dropdownList.move(pos)
+        self.dropdownList.setFixedWidth(self.searchBar.width())
+
+    def actualizar_lista(self):
+        """Actualizar la lista desplegable según el texto de búsqueda."""
+        texto_busqueda = self.searchBar.text().lower()
+        productos_filtrados = [
+            producto for producto in self.productos
+            if texto_busqueda in producto["nombre"].lower()
+        ]
+
+        # Limpiar y ocultar lista si no hay resultados
+        self.dropdownList.clear()
+        if not productos_filtrados:
+            self.dropdownList.hide()
+            return
+
+        # Agregar productos filtrados a la lista desplegable
+        for producto in productos_filtrados:
+            self.dropdownList.addItem(f"{producto['nombre']} - ${producto['precio']:.2f}")
+
+        # Mostrar la lista desplegable
+        self.dropdownList.show()
+    
+
+    def seleccionar_producto(self, index):
+        """Agregar el producto seleccionado desde la lista desplegable."""
+        if index < 0:
+            return  # Si no hay selección válida, salir
+
+        # Obtener el producto seleccionado
+        producto_texto = self.dropdownList.itemText(index)
+        nombre_producto = producto_texto.split(" - ")[0]
+
+        # Buscar el producto por nombre
+        producto = next((p for p in self.productos if p["nombre"] == nombre_producto), None)
+        if producto:
+            self.preguntar_cantidad(producto)
+
+        # Ocultar la lista y limpiar la barra de búsqueda
+        self.dropdownList.hide()
+        self.searchBar.clear()
+
+    def agregar_por_defecto(self):
+        """Agregar al carrito con cantidad 1 si el usuario presiona Enter."""
+        texto_busqueda = self.searchBar.text().lower()
+        producto = next((p for p in self.productos if texto_busqueda in p["nombre"].lower()), None)
+        if producto:
+            self.agregar_al_carrito(producto, 1)
+            self.searchBar.clear()
+            self.dropdownList.hide()
 
     def mover_izquierda(self):
         self.scrollArea.horizontalScrollBar().setValue(
