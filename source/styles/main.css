@@ -47,3 +47,30 @@ QPushButton:checked{
     background-color: #388e3c;
     font-weight: bold;
 }
+
+QAbstractItemView {
+    background-color: #ECEFF4;
+    border: 1px solid #e652c9;
+    color: #333;
+    font-size: 14px;
+    
+    ::selection {
+        background-color: #e652c9;
+        color: #FFFFFF
+    }
+}
+
+.iconButton {
+    background-color: transparent;
+    color: #e652c9;
+    border: none;
+    font-size: 18px;
+}
+
+.iconButton:hover {
+    color: #ff66ff;
+}
+
+.iconButton:pressed {
+    color: #536f7c;
+}

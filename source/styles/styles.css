@@ -104,3 +104,20 @@ QMessageBox {
     background-color: #a9becc;
     color: #333;
 }
+
+
+.iconButton {
+    background-color: transparent;
+    color: #e652c9;
+    border: none;
+    font-size: 18px;
+}
+
+.iconButton:hover {
+    color: #ff66ff;
+}
+
+.iconButton:pressed {
+    color: #536f7c;
+}
+

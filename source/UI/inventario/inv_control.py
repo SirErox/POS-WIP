@@ -1,10 +1,10 @@
 from PyQt5.QtWidgets import (
     QLabel, QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem, 
-    QPushButton, QHBoxLayout, QLineEdit, QComboBox, QDialog, QSpinBox,
+    QPushButton, QHBoxLayout, QLineEdit, QComboBox, QDialog,
     QMessageBox
 )
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon,QFont
+from PyQt5.QtGui import QIcon
 from source.database.database import SessionLocal
 from source.database.models import Inventario, Proveedor, ProductoProveedor
 from ...database.crud import actualizar_producto, eliminar_producto, agregar_proveedor_producto
