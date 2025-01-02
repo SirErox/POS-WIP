@@ -1,7 +1,6 @@
 from datetime import datetime
 import uuid
 
-
 def calcular_edad(fecha_nacimiento):
     """Calcula la edad en años a partir de la fecha de nacimiento."""
     if isinstance(fecha_nacimiento, str):

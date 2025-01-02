@@ -7,7 +7,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from source.database.database import SessionLocal
 from source.database.models import Inventario, Proveedor, ProductoProveedor
-from ...database.crud import actualizar_producto, eliminar_producto, agregar_proveedor_producto
+from ...database.crud import CRUDInventario
 from ...UI.inventario.inv_mov import VentanaMovimientos
 from ...UI.reportes.inv_report import VentanaReportes
 from ...UI.inventario.inv_form import FormularioProducto
@@ -116,7 +116,7 @@ class VentanaInventario(QWidget):
     def actualizar_stock(self, producto_id, cantidad):
         session = SessionLocal()
         try:
-            actualizar_producto(session, producto_id, cantidad_stock=cantidad)
+            CRUDInventario.actualizar_producto(session, producto_id, cantidad_stock=cantidad)
         except Exception as e:
             QMessageBox.critical(self, "Error", f"No se pudo actualizar el stock: {e}")
         finally:

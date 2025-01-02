@@ -5,7 +5,7 @@ from PyQt5.QtCore import QDate,Qt
 from PyQt5.QtGui import QPixmap,QIcon
 from datetime import datetime
 import os,shutil,re
-from ..database.crud import agregar_usuario, editar_usuario
+from ..database.crud import CRUDUsuarios
 
 class UserFormDialog(QDialog):
     def __init__(self, logged_user,user_data=None, parent=None):
@@ -191,7 +191,7 @@ class UserFormDialog(QDialog):
         try:
             ultimo_editor = self.usuario_logueado  # Asegúrate de tener esta variable en tu clase
             if self.user_data:  # Editar usuario
-                editar_usuario(
+                CRUDUsuarios.editar_usuario(
                     self.user_data.get("id"),
                     nombre_completo=nombre_completo,
                     username=username,
@@ -205,7 +205,7 @@ class UserFormDialog(QDialog):
                 )
                 QMessageBox.information(self, "Éxito", "Usuario editado correctamente.")
             else:  # Agregar usuario
-                agregar_usuario(
+                CRUDUsuarios.agregar_usuario(
                     nombre_completo=nombre_completo,
                     username=username,
                     password=password,

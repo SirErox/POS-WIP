@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QPixmap,QIcon
 from PyQt5.QtCore import Qt
 from ...database.database import SessionLocal
-from ...database.crud import agregar_producto, actualizar_producto, buscar_producto
+from ...database.crud import CRUDInventario
 from ...Utils.helpers import generar_codigo_barras
 
 class FormularioProducto(QDialog):
@@ -78,7 +78,7 @@ class FormularioProducto(QDialog):
     def cargar_datos(self):
         session = SessionLocal()
         try:
-            producto = buscar_producto(session, self.producto_id)
+            producto = CRUDInventario.buscar_producto(session, self.producto_id)
             self.nombre.setText(producto.nombre_producto)
             self.descripcion.setText(producto.descripcion)
             self.categoria.setText(producto.categoria)
@@ -127,7 +127,7 @@ class FormularioProducto(QDialog):
                 self.foto_path = nueva_foto_path
 
             if self.producto_id is None:
-                agregar_producto(
+                CRUDInventario.agregar_producto(
                     session,
                     nombre_producto,
                     self.descripcion.text(),
@@ -142,7 +142,7 @@ class FormularioProducto(QDialog):
                 )
                 QMessageBox.information(self, "Éxito", "Producto agregado correctamente.")
             else:
-                actualizar_producto(
+                CRUDInventario.actualizar_producto(
                     session,
                     self.producto_id,
                     nombre_producto=nombre_producto,

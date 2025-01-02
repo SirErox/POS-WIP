@@ -6,7 +6,7 @@ from PyQt5.QtCore import QDate,Qt
 from PyQt5.QtGui import QIcon
 from source.database.database import SessionLocal
 from .User_form import UserFormDialog
-from ..database.crud import agregar_usuario,eliminar_usuario,editar_usuario,listar_usuarios,registrar_actividad
+from ..database.crud import CRUDUsuarios
 class UserControlWindow(QWidget):
     def __init__(self,logged_user):
         super().__init__()
@@ -67,7 +67,7 @@ class UserControlWindow(QWidget):
     def load_users(self):
         """Cargar datos de usuarios desde la base de datos."""
         self.user_table.setRowCount(0)
-        usuarios = listar_usuarios()
+        usuarios = CRUDUsuarios.listar_usuarios()
         for row, user in enumerate(usuarios):
             self.user_table.insertRow(row)
             self.user_table.setItem(row, 0, QTableWidgetItem(str(user.id)))
@@ -114,7 +114,7 @@ class UserControlWindow(QWidget):
         if dialog.exec_():  # Si el usuario presiona "Guardar"
             # Actualizar los datos en la base de datos
             try:
-                editar_usuario(dialog.user_data)  # `dialog.user_data` debe contener los datos actualizados
+                CRUDUsuarios.editar_usuario(dialog.user_data)  # `dialog.user_data` debe contener los datos actualizados
                 QMessageBox.information(self, "Éxito", "Usuario actualizado correctamente.")
                 self.load_users()  # Recargar la tabla con los datos actualizados
             except Exception as e:
@@ -140,7 +140,7 @@ class UserControlWindow(QWidget):
 
         if confirm == QMessageBox.Yes:
             try:
-                eliminar_usuario(user_id)  # Llamar a la función del CRUD
+                CRUDUsuarios.eliminar_usuario(user_id)  # Llamar a la función del CRUD
                 QMessageBox.information(self, "Éxito", "Usuario eliminado correctamente.")
                 self.load_users()  # Recargar la tabla
             except Exception as e:
